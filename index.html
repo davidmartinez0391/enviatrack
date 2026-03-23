@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>EnvíaTrack - Panel de Control</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>EnvíaTrack</h1>
+    <p>Panel de control de envíos</p>
+
+    <!-- Tarjetas de estadísticas -->
+    <div id="estadisticas" style="display: flex; gap: 20px; margin-bottom: 20px;">
+        <div class="tarjeta pendiente">
+            <h3>⏳ Pendientes</h3>
+            <p id="contador-pendiente">0</p>
+        </div>
+        <div class="tarjeta en-ruta">
+            <h3>🚚 En Ruta</h3>
+            <p id="contador-en-ruta">0</p>
+        </div>
+        <div class="tarjeta entregado">
+            <h3>✅ Entregados</h3>
+            <p id="contador-entregado">0</p>
+        </div>
+        <div class="tarjeta total">
+            <h3>📦 Total</h3>
+            <p id="contador-total">0</p>
+        </div>
+    </div>
+
+    <!-- Formulario para crear nuevo envío -->
+    <div id="formulario-envio" style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+        <h2>Registrar Nuevo Envío</h2>
+        <form id="form-nuevo-envio">
+            <div style="margin-bottom: 10px;">
+                <label style="display: inline-block; width: 100px;">Destinatario:</label>
+                <input type="text" id="destinatario" required style="padding: 8px; width: 300px;">
+            </div>
+            <div style="margin-bottom: 10px;">
+                <label style="display: inline-block; width: 100px;">Dirección:</label>
+                <input type="text" id="direccion" required style="padding: 8px; width: 300px;">
+            </div>
+            <div style="margin-bottom: 10px;">
+                <label style="display: inline-block; width: 100px;">Teléfono:</label>
+                <input type="text" id="telefono" required style="padding: 8px; width: 300px;">
+            </div>
+            <button type="submit" style="background-color: #27ae60; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Registrar Envío</button>
+        </form>
+    </div>
+
+    <div id="contenedor-envios">
+        <h2>Lista de Envíos</h2>
+        
+        <!-- Buscador y botón exportar -->
+        <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+            <input type="text" id="buscador" placeholder="🔍 Buscar por destinatario o dirección..." style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px;">
+            <button id="btn-exportar" style="background-color: #27ae60; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">📊 Exportar a Excel</button>
+        </div>
+        
+        <div id="tabla-envios"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
