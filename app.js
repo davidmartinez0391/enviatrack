@@ -2,6 +2,17 @@
 let envios = [];
 
 let proximoId = 1;
+// Función para normalizar texto (quitar tildes y convertir a minúsculas)
+function normalizarTexto(texto) {
+    return texto.toLowerCase()
+        .replace(/á/g, 'a')
+        .replace(/é/g, 'e')
+        .replace(/í/g, 'i')
+        .replace(/ó/g, 'o')
+        .replace(/ú/g, 'u')
+        .replace(/ñ/g, 'n')
+        .replace(/ü/g, 'u');
+}
 
 function cargarDatos() {
     let datos = localStorage.getItem('enviaTrack_envios');
@@ -37,11 +48,15 @@ function mostrarTabla() {
     let contenedor = document.getElementById('tabla-envios');
     if (!contenedor) return;
     
-    let texto = document.getElementById('buscador').value.toLowerCase();
+    let texto = normalizarTexto(document.getElementById('buscador').value);
     let filtrados = envios;
     
     if (texto !== '') {
-        filtrados = envios.filter(e => e.destinatario.toLowerCase().includes(texto) || e.direccion.toLowerCase().includes(texto));
+        filtrados = envios.filter(e => {
+            let destinatarioNorm = normalizarTexto(e.destinatario);
+            let direccionNorm = normalizarTexto(e.direccion);
+            return destinatarioNorm.includes(texto) || direccionNorm.includes(texto);
+        });
     }
     
     let html = '<table style="width:100%; border-collapse:collapse;"><thead style="background:#333; color:white;"><tr>';
