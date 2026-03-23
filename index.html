@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>EnvíaTrack - Panel de Control</title>
@@ -27,6 +28,17 @@
         <div class="tarjeta total">
             <h3>📦 Total</h3>
             <p id="contador-total">0</p>
+        </div>
+    </div>
+        <!-- Gráficos Dashboard -->
+    <div id="dashboard" style="display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap;">
+        <div style="flex: 1; background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            <h3 style="margin-bottom: 15px; text-align: center;">📊 Distribución de Envíos</h3>
+            <canvas id="graficoEstados" style="max-height: 250px;"></canvas>
+        </div>
+        <div style="flex: 1; background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            <h3 style="margin-bottom: 15px; text-align: center;">📈 Evolución de Entregas</h3>
+            <canvas id="graficoEntregas" style="max-height: 250px;"></canvas>
         </div>
     </div>
 

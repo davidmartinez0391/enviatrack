@@ -2,6 +2,9 @@
 let envios = [];
 
 let proximoId = 1;
+// Variables para gráficos
+let graficoEstados = null;
+let graficoEntregas = null;
 // Función para normalizar texto (quitar tildes y convertir a minúsculas)
 function normalizarTexto(texto) {
     return texto.toLowerCase()
@@ -58,6 +61,7 @@ function mostrarTabla() {
             return destinatarioNorm.includes(texto) || direccionNorm.includes(texto);
         });
     }
+    actualizarGraficos();
     
     let html = '<table style="width:100%; border-collapse:collapse;"><thead style="background:#333; color:white;"><tr>';
     html += '<th style="padding:10px;">ID</th><th style="padding:10px;">Destinatario</th><th style="padding:10px;">Dirección</th><th style="padding:10px;">Teléfono</th>';
@@ -109,6 +113,7 @@ function mostrarTabla() {
     document.getElementById('contador-en-ruta').textContent = ruta;
     document.getElementById('contador-entregado').textContent = entre;
     document.getElementById('contador-total').textContent = envios.length;
+    actualizarGraficos();
 }
 
 function iniciarRuta(id) {
@@ -208,3 +213,96 @@ document.getElementById('buscador').addEventListener('input', function() {
 document.getElementById('btn-exportar').addEventListener('click', function() {
     exportarCSV();
 });
+// Función para actualizar gráficos
+function actualizarGraficos() {
+    // Datos para gráfico de estados
+    const pendientes = envios.filter(e => e.estado === 'pendiente').length;
+    const enRuta = envios.filter(e => e.estado === 'en_ruta').length;
+    const entregados = envios.filter(e => e.estado === 'entregado').length;
+    
+    // Gráfico de estados (torta/dona)
+    const ctxEstados = document.getElementById('graficoEstados');
+    if (ctxEstados) {
+        if (graficoEstados) {
+            graficoEstados.destroy();
+        }
+        graficoEstados = new Chart(ctxEstados, {
+            type: 'doughnut',
+            data: {
+                labels: ['Pendientes', 'En Ruta', 'Entregados'],
+                datasets: [{
+                    data: [pendientes, enRuta, entregados],
+                    backgroundColor: ['#f39c12', '#3498db', '#27ae60'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+    
+    // Datos para gráfico de entregas por día (últimos 7 días)
+    const ultimos7Dias = [];
+    const entregasPorDia = [];
+    
+    for (let i = 6; i >= 0; i--) {
+        const fecha = new Date();
+        fecha.setDate(fecha.getDate() - i);
+        const fechaStr = fecha.toLocaleDateString();
+        ultimos7Dias.push(fechaStr);
+        
+        // Contar entregas de este día
+        const entregasDia = envios.filter(e => {
+            if (!e.fechaEntrega) return false;
+            const fechaEntrega = new Date(e.fechaEntrega);
+            return fechaEntrega.toLocaleDateString() === fechaStr;
+        }).length;
+        entregasPorDia.push(entregasDia);
+    }
+    
+    // Gráfico de entregas (línea)
+    const ctxEntregas = document.getElementById('graficoEntregas');
+    if (ctxEntregas) {
+        if (graficoEntregas) {
+            graficoEntregas.destroy();
+        }
+        graficoEntregas = new Chart(ctxEntregas, {
+            type: 'line',
+            data: {
+                labels: ultimos7Dias,
+                datasets: [{
+                    label: 'Entregas realizadas',
+                    data: entregasPorDia,
+                    borderColor: '#27ae60',
+                    backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    }
+}
