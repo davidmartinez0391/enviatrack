@@ -5,6 +5,46 @@ let proximoId = 1;
 // Variables para gráficos
 let graficoEstados = null;
 let graficoEntregas = null;
+// Función para mostrar notificaciones toast
+function mostrarNotificacion(mensaje, tipo = 'success', titulo = '') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    
+    const iconos = {
+        success: '✅',
+        error: '❌',
+        info: 'ℹ️',
+        warning: '⚠️'
+    };
+    
+    const titulos = {
+        success: 'Éxito',
+        error: 'Error',
+        info: 'Información',
+        warning: 'Advertencia'
+    };
+    
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${tipo}`;
+    toast.innerHTML = `
+        <div class="toast-icon">${iconos[tipo] || 'ℹ️'}</div>
+        <div class="toast-content">
+            <div class="toast-title">${titulo || titulos[tipo]}</div>
+            <div class="toast-message">${mensaje}</div>
+        </div>
+        <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+    `;
+    
+    container.appendChild(toast);
+    
+    // Auto eliminar después de 3 segundos
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.classList.add('toast-hide');
+            setTimeout(() => toast.remove(), 300);
+        }
+    }, 3000);
+}
 // Función para normalizar texto (quitar tildes y convertir a minúsculas)
 function normalizarTexto(texto) {
     return texto.toLowerCase()
@@ -123,7 +163,7 @@ function iniciarRuta(id) {
         if (!e.mensajero) e.mensajero = 'Mensajero Asignado';
         guardarDatos();
         mostrarTabla();
-        alert('🚚 Envío #' + id + ' está en RUTA');
+        mostrarNotificacion(`Envío #${id} está en ruta con mensajero ${e.mensajero}`, 'info', 'Ruta iniciada');
     }
 }
 
@@ -134,7 +174,7 @@ function marcarEntregado(id) {
         e.fechaEntrega = new Date().toLocaleString();
         guardarDatos();
         mostrarTabla();
-        alert('✅ Envío #' + id + ' marcado como ENTREGADO');
+        mostrarNotificacion(`Envío #${id} entregado a ${e.destinatario}`, 'success', 'Entrega completada');
     }
 }
 
@@ -145,7 +185,7 @@ function eliminarEnvio(id) {
         envios.splice(idx, 1);
         guardarDatos();
         mostrarTabla();
-        alert('🗑️ Envío #' + id + ' eliminado');
+        mostrarNotificacion(`Envío #${id} de ${e.destinatario} eliminado`, 'warning', 'Envío eliminado');
     }
 }
 
@@ -155,7 +195,7 @@ function agregarEnvio() {
     let tel = document.getElementById('telefono').value;
     
     if (!dest || !dir || !tel) {
-        alert('Completa todos los campos');
+        mostrarNotificacion('Completa todos los campos', 'warning', 'Campos incompletos');
         return false;
     }
     
@@ -178,7 +218,7 @@ function agregarEnvio() {
     document.getElementById('direccion').value = '';
     document.getElementById('telefono').value = '';
     
-    alert('✅ Envío registrado');
+    mostrarNotificacion(`Envío #${nuevo.id} registrado correctamente`, 'success', 'Envío creado');
     return false;
 }
 
@@ -195,7 +235,7 @@ function exportarCSV() {
     link.download = 'envios_' + new Date().toLocaleDateString() + '.csv';
     link.click();
     URL.revokeObjectURL(link.href);
-    alert('📊 Exportados ' + envios.length + ' envíos');
+    mostrarNotificacion(`Exportados ${envios.length} envíos a CSV`, 'success', 'Exportación completa');
 }
 
 cargarDatos();
