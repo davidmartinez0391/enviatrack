@@ -1,10 +1,75 @@
-// Configuración de Supabase - URL CORRECTA
+// Configuración de Supabase
 const SUPABASE_URL = 'https://prenermnmqexgzpbmcfm.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InByZW5lcm5tbnFleGd6cGJtY2ZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMjc1NTQsImV4cCI6MjA4OTgwMzU1NH0.VfxRvPnNRv5yXG0SabqPgU8tVH4pEbj7D6YRuNcSTL8';
 
-// Cliente de Supabase
 let supabaseClient = null;
 let envios = [];
+let usuarioActual = null;
+
+// ========== AUTENTICACIÓN ==========
+
+async function iniciarSesion() {
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    
+    if (!email || !password) {
+        mostrarNotificacion('Completa todos los campos', 'warning', 'Campos incompletos');
+        return;
+    }
+    
+    mostrarNotificacion('Iniciando sesión...', 'info', 'Conectando');
+    
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+    });
+    
+    if (error) {
+        console.error('Error de login:', error);
+        mostrarNotificacion('Email o contraseña incorrectos', 'error', 'Error de autenticación');
+        return;
+    }
+    
+    usuarioActual = data.user;
+    localStorage.setItem('enviaTrack_user', JSON.stringify({ email: usuarioActual.email }));
+    
+    mostrarNotificacion(`Bienvenido ${usuarioActual.email}`, 'success', 'Sesión iniciada');
+    
+    // Ocultar login y mostrar panel
+    document.getElementById('login-panel').style.display = 'none';
+    document.getElementById('main-panel').style.display = 'block';
+    
+    // Cargar datos
+    await cargarEnvios();
+}
+
+async function cerrarSesion() {
+    await supabaseClient.auth.signOut();
+    usuarioActual = null;
+    localStorage.removeItem('enviaTrack_user');
+    
+    // Mostrar login y ocultar panel
+    document.getElementById('login-panel').style.display = 'block';
+    document.getElementById('main-panel').style.display = 'none';
+    
+    mostrarNotificacion('Sesión cerrada', 'info', 'Hasta luego');
+}
+
+async function verificarSesion() {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    
+    if (session) {
+        usuarioActual = session.user;
+        document.getElementById('login-panel').style.display = 'none';
+        document.getElementById('main-panel').style.display = 'block';
+        await cargarEnvios();
+    } else {
+        document.getElementById('login-panel').style.display = 'block';
+        document.getElementById('main-panel').style.display = 'none';
+    }
+}
+
+// ========== FUNCIONES PRINCIPALES ==========
 
 function normalizarTexto(texto) {
     return texto.toLowerCase()
@@ -46,7 +111,6 @@ function mostrarNotificacion(mensaje, tipo = 'success', titulo = '') {
 
 async function cargarEnvios() {
     try {
-        console.log('🔄 Conectando a Supabase...');
         const { data, error } = await supabaseClient
             .from('envios')
             .select('*')
@@ -54,13 +118,13 @@ async function cargarEnvios() {
         
         if (error) throw error;
         envios = data || [];
-        console.log(`✅ Cargados ${envios.length} envíos desde la nube`);
+        console.log(`✅ Cargados ${envios.length} envíos`);
         mostrarTabla();
         actualizarGraficos();
         actualizarContadores();
     } catch (error) {
         console.error('Error al cargar envíos:', error);
-        mostrarNotificacion('Error de conexión con la nube. Verifica tu internet.', 'error', 'Error');
+        mostrarNotificacion('Error de conexión', 'error', 'Error');
         envios = [];
         mostrarTabla();
     }
@@ -76,7 +140,7 @@ async function guardarEnvio(envio) {
         await cargarEnvios();
     } catch (error) {
         console.error('Error al guardar:', error);
-        mostrarNotificacion('Error al guardar en la nube', 'error', 'Error');
+        mostrarNotificacion('Error al guardar', 'error', 'Error');
     }
 }
 
@@ -91,7 +155,7 @@ async function eliminarEnvioDB(id) {
         await cargarEnvios();
     } catch (error) {
         console.error('Error al eliminar:', error);
-        mostrarNotificacion('Error al eliminar de la nube', 'error', 'Error');
+        mostrarNotificacion('Error al eliminar', 'error', 'Error');
     }
 }
 
@@ -110,16 +174,11 @@ function mostrarTabla() {
         });
     }
     
-    if (filtrados.length === 0 && envios.length === 0) {
-        contenedor.innerHTML = '<p style="text-align:center; padding:20px;">🔄 Cargando datos desde la nube...</p>';
-        return;
-    }
-    
     let html = `<table style="width:100%; border-collapse:collapse;"><thead style="background:#333; color:white;"><tr>
         <th style="padding:10px;">ID</th><th style="padding:10px;">Destinatario</th><th style="padding:10px;">Dirección</th>
         <th style="padding:10px;">Teléfono</th><th style="padding:10px;">Estado</th><th style="padding:10px;">Mensajero</th>
         <th style="padding:10px;">Fecha Creación</th><th style="padding:10px;">Fecha Entrega</th><th style="padding:10px;">Acciones</th>
-     </tr></thead><tbody>`;
+    </tr></thead><tbody>`;
     
     for (let e of filtrados) {
         let estadoText = { 'pendiente': '⏳ Pendiente', 'en_ruta': '🚚 En ruta', 'entregado': '✅ Entregado' };
@@ -155,13 +214,15 @@ function mostrarTabla() {
             <td style="padding:8px;">${fechaCreacion}</td>
             <td style="padding:8px;">${fechaEntrega}</td>
             <td style="padding:8px; text-align:center;">${botones}</td>
-         </tr>`;
+        </tr>`;
     }
     
     html += `</tbody></table>`;
     
-    if (filtrados.length === 0 && envios.length > 0) {
-        html = '<p style="text-align:center; padding:20px;">No hay envíos que coincidan con la búsqueda</p>';
+    if (filtrados.length === 0 && envios.length === 0) {
+        html = '<p style="text-align:center; padding:20px;">No hay envíos registrados</p>';
+    } else if (filtrados.length === 0 && envios.length > 0) {
+        html = '<p style="text-align:center; padding:20px;">No hay envíos que coincidan</p>';
     }
     
     contenedor.innerHTML = html;
@@ -172,15 +233,10 @@ function actualizarContadores() {
     let ruta = envios.filter(e => e.estado === 'en_ruta').length;
     let entre = envios.filter(e => e.estado === 'entregado').length;
     
-    const p1 = document.getElementById('contador-pendiente');
-    const p2 = document.getElementById('contador-en-ruta');
-    const p3 = document.getElementById('contador-entregado');
-    const p4 = document.getElementById('contador-total');
-    
-    if (p1) p1.textContent = pend;
-    if (p2) p2.textContent = ruta;
-    if (p3) p3.textContent = entre;
-    if (p4) p4.textContent = envios.length;
+    document.getElementById('contador-pendiente').textContent = pend;
+    document.getElementById('contador-en-ruta').textContent = ruta;
+    document.getElementById('contador-entregado').textContent = entre;
+    document.getElementById('contador-total').textContent = envios.length;
 }
 
 let graficoEstados = null;
@@ -218,8 +274,7 @@ function actualizarGraficos() {
         const entregasDia = envios.filter(e => {
             const fechaEntrega = e.fecha_entrega || e.fechaEntrega;
             if (!fechaEntrega) return false;
-            const fechaEntregaDate = new Date(fechaEntrega);
-            return fechaEntregaDate.toLocaleDateString() === fechaStr;
+            return new Date(fechaEntrega).toLocaleDateString() === fechaStr;
         }).length;
         entregasPorDia.push(entregasDia);
     }
@@ -254,7 +309,7 @@ async function marcarEntregado(id) {
         e.estado = 'entregado';
         e.fecha_entrega = new Date().toISOString();
         await guardarEnvio(e);
-        mostrarNotificacion(`Envío #${id} entregado a ${e.destinatario}`, 'success', 'Entrega completada');
+        mostrarNotificacion(`Envío #${id} entregado`, 'success', 'Entrega completada');
     }
 }
 
@@ -359,28 +414,31 @@ function toggleDarkMode() {
     const isDark = document.body.classList.contains('dark-mode');
     localStorage.setItem('enviaTrack_darkMode', isDark);
     const btn = document.getElementById('btn-dark-mode');
-    if (btn) {
-        btn.innerHTML = isDark ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
-    }
+    if (btn) btn.innerHTML = isDark ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
 }
 
-// Inicializar Supabase y cargar datos
+// Inicializar
 async function init() {
-    console.log('🚀 Iniciando EnvíaTrack con Supabase...');
     supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    await cargarEnvios();
+    
+    // Configurar eventos
+    document.getElementById('btn-login')?.addEventListener('click', iniciarSesion);
+    document.getElementById('btn-logout')?.addEventListener('click', cerrarSesion);
+    document.getElementById('form-nuevo-envio')?.addEventListener('submit', (e) => { e.preventDefault(); agregarEnvio(); });
+    document.getElementById('buscador')?.addEventListener('input', filtrarEnvios);
+    document.getElementById('btn-exportar')?.addEventListener('click', exportarCSV);
+    document.getElementById('btn-dark-mode')?.addEventListener('click', toggleDarkMode);
+    
+    // Permitir login con Enter
+    document.getElementById('login-password')?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') iniciarSesion();
+    });
+    document.getElementById('login-email')?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') iniciarSesion();
+    });
+    
+    initDarkMode();
+    await verificarSesion();
 }
 
-// Eventos
-document.getElementById('form-nuevo-envio')?.addEventListener('submit', (e) => { e.preventDefault(); agregarEnvio(); });
-document.getElementById('buscador')?.addEventListener('input', filtrarEnvios);
-document.getElementById('btn-exportar')?.addEventListener('click', exportarCSV);
-
-const btnDarkMode = document.getElementById('btn-dark-mode');
-if (btnDarkMode) {
-    btnDarkMode.addEventListener('click', toggleDarkMode);
-}
-initDarkMode();
-
-// Iniciar
 init();
