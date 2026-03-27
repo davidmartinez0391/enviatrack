@@ -333,11 +333,11 @@ mostrarTabla();
 
 document.getElementById('form-nuevo-envio')?.addEventListener('submit', (e) => { e.preventDefault(); agregarEnvio(); });
 document.getElementById('buscador')?.addEventListener('input', filtrarEnvios);
-document.getElementById('btn-exportar')?.addEventListener('click', exportarCSV);
-
-// Evento modo oscuro
 const btnDarkMode = document.getElementById('btn-dark-mode');
 if (btnDarkMode) {
     btnDarkMode.addEventListener('click', toggleDarkMode);
 }
+initDarkMode();
+document.getElementById('btn-exportar')?.addEventListener('click', exportarCSV);
+
 initDarkMode();
