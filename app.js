@@ -85,11 +85,11 @@ function mostrarTabla() {
         });
     }
     
-    let html = `<table style="width:100%; border-collapse:collapse;"><thead style="background:#333; color:white;"><tr>
+    let html = `<table style="width:100%; border-collapse:collapse;"><thead style="background:#333; color:white;"><html>
         <th style="padding:10px;">ID</th><th style="padding:10px;">Destinatario</th><th style="padding:10px;">Dirección</th>
         <th style="padding:10px;">Teléfono</th><th style="padding:10px;">Estado</th><th style="padding:10px;">Mensajero</th>
         <th style="padding:10px;">Fecha Creación</th><th style="padding:10px;">Fecha Entrega</th><th style="padding:10px;">Acciones</th>
-     </tr></thead><tbody>`;
+    </tr></thead><tbody>`;
     
     for (let e of filtrados) {
         let estadoText = { 'pendiente': '⏳ Pendiente', 'en_ruta': '🚚 En ruta', 'entregado': '✅ Entregado' };
@@ -122,7 +122,7 @@ function mostrarTabla() {
             <td style="padding:8px;">${e.fechaCreacion}</td>
             <td style="padding:8px;">${e.fechaEntrega || '—'}</td>
             <td style="padding:8px; text-align:center;">${botones}</td>
-         </tr>`;
+        </tr>`;
     }
     
     html += `</tbody></table>`;
@@ -308,12 +308,6 @@ function exportarCSV() {
     mostrarNotificacion(`Exportados ${envios.length} envíos`, 'success', 'Exportación completa');
 }
 
-cargarDatos();
-mostrarTabla();
-
-document.getElementById('form-nuevo-envio')?.addEventListener('submit', (e) => { e.preventDefault(); agregarEnvio(); });
-document.getElementById('buscador')?.addEventListener('input', filtrarEnvios);
-document.getElementById('btn-exportar')?.addEventListener('click', exportarCSV);
 // Modo Oscuro
 function initDarkMode() {
     const darkMode = localStorage.getItem('enviaTrack_darkMode') === 'true';
@@ -334,11 +328,16 @@ function toggleDarkMode() {
     }
 }
 
-// Evento del botón
+cargarDatos();
+mostrarTabla();
+
+document.getElementById('form-nuevo-envio')?.addEventListener('submit', (e) => { e.preventDefault(); agregarEnvio(); });
+document.getElementById('buscador')?.addEventListener('input', filtrarEnvios);
+document.getElementById('btn-exportar')?.addEventListener('click', exportarCSV);
+
+// Evento modo oscuro
 const btnDarkMode = document.getElementById('btn-dark-mode');
 if (btnDarkMode) {
     btnDarkMode.addEventListener('click', toggleDarkMode);
 }
-
-// Inicializar modo oscuro
 initDarkMode();
