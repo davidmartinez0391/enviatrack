@@ -12,9 +12,12 @@
 <body>
     <div id="toast-container" class="toast-container"></div>
 
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;">
         <h1>EnvíaTrack</h1>
-        <a href="admin.html" style="background-color: #9b59b6; color: white; padding: 8px 16px; border-radius: 5px; text-decoration: none;">👑 Administrar</a>
+        <div style="display: flex; gap: 10px;">
+            <button id="btn-dark-mode" style="background-color: #34495e; color: white; padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer;">🌙 Modo Oscuro</button>
+            <a href="admin.html" style="background-color: #9b59b6; color: white; padding: 8px 16px; border-radius: 5px; text-decoration: none;">👑 Administrar</a>
+        </div>
     </div>
     <p>Panel de control de envíos</p>
 
