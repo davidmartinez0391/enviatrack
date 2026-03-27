@@ -314,3 +314,31 @@ mostrarTabla();
 document.getElementById('form-nuevo-envio')?.addEventListener('submit', (e) => { e.preventDefault(); agregarEnvio(); });
 document.getElementById('buscador')?.addEventListener('input', filtrarEnvios);
 document.getElementById('btn-exportar')?.addEventListener('click', exportarCSV);
+// Modo Oscuro
+function initDarkMode() {
+    const darkMode = localStorage.getItem('enviaTrack_darkMode') === 'true';
+    if (darkMode) {
+        document.body.classList.add('dark-mode');
+        const btn = document.getElementById('btn-dark-mode');
+        if (btn) btn.innerHTML = '☀️ Modo Claro';
+    }
+}
+
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('enviaTrack_darkMode', isDark);
+    const btn = document.getElementById('btn-dark-mode');
+    if (btn) {
+        btn.innerHTML = isDark ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
+    }
+}
+
+// Evento del botón
+const btnDarkMode = document.getElementById('btn-dark-mode');
+if (btnDarkMode) {
+    btnDarkMode.addEventListener('click', toggleDarkMode);
+}
+
+// Inicializar modo oscuro
+initDarkMode();
