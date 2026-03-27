@@ -159,14 +159,19 @@ function mostrarTabla() {
         let estadoClass = { 'pendiente': 'estado-pendiente', 'en_ruta': 'estado-en-ruta', 'entregado': 'estado-entregado' };
         
         let botones = '';
+        let btnEditar = `<button onclick="editarEnvio(${e.id})" style="background:#f39c12; color:white; padding:5px 10px; margin-right:5px; border:none; border-radius:3px;">✏️ Editar</button>`;
+
         if (e.estado === 'pendiente') {
-            botones = `<button onclick="iniciarRuta(${e.id})" style="background:#3498db; color:white; padding:5px 10px; margin-right:5px; border:none; border-radius:3px;">🚚 Iniciar Ruta</button>`;
+            botones = btnEditar;
+            botones += `<button onclick="iniciarRuta(${e.id})" style="background:#3498db; color:white; padding:5px 10px; margin-right:5px; border:none; border-radius:3px;">🚚 Iniciar Ruta</button>`;
             botones += `<button onclick="eliminarEnvio(${e.id})" style="background:#e74c3c; color:white; padding:5px 10px; border:none; border-radius:3px;">🗑️ Eliminar</button>`;
         } else if (e.estado === 'en_ruta') {
-            botones = `<button onclick="marcarEntregado(${e.id})" style="background:#27ae60; color:white; padding:5px 10px; margin-right:5px; border:none; border-radius:3px;">✅ Marcar Entregado</button>`;
+            botones = btnEditar;
+            botones += `<button onclick="marcarEntregado(${e.id})" style="background:#27ae60; color:white; padding:5px 10px; margin-right:5px; border:none; border-radius:3px;">✅ Marcar Entregado</button>`;
             botones += `<button onclick="eliminarEnvio(${e.id})" style="background:#e74c3c; color:white; padding:5px 10px; border:none; border-radius:3px;">🗑️ Eliminar</button>`;
         } else {
-            botones = `<span style="color:#27ae60;">✓ Completado</span>`;
+            botones = `<span style="color:#27ae60; margin-right:10px;">✓ Completado</span>`;
+            botones += btnEditar;
             botones += `<button onclick="eliminarEnvio(${e.id})" style="background:#e74c3c; color:white; padding:5px 10px; margin-left:5px; border:none; border-radius:3px;">🗑️ Eliminar</button>`;
         }
         
@@ -349,7 +354,35 @@ function exportarCSV() {
     URL.revokeObjectURL(link.href);
     mostrarNotificacion(`Exportados ${envios.length} envíos`, 'success', 'Exportación completa');
 }
-
+// Función para editar un envío
+async function editarEnvio(id) {
+    const envio = envios.find(e => e.id === id);
+    if (!envio) {
+        mostrarNotificacion('Envío no encontrado', 'error', 'Error');
+        return;
+    }
+    
+    const nuevoDestinatario = prompt('Editar destinatario:', envio.destinatario);
+    if (!nuevoDestinatario) return;
+    
+    const nuevaDireccion = prompt('Editar dirección:', envio.direccion);
+    if (!nuevaDireccion) return;
+    
+    const nuevoTelefono = prompt('Editar teléfono:', envio.telefono);
+    if (!nuevoTelefono) return;
+    
+    // Actualizar datos
+    envio.destinatario = nuevoDestinatario;
+    envio.direccion = nuevaDireccion;
+    envio.telefono = nuevoTelefono;
+    
+    // Guardar en Supabase
+    await guardarEnvio(envio);
+    await cargarEnvios();
+    mostrarTabla();
+    
+    mostrarNotificacion(`Envío #${id} actualizado`, 'success', 'Editado');
+}
 // Eventos y inicio
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('form-nuevo-envio');
