@@ -285,3 +285,151 @@ table tr:hover {
 .toast-hide {
     animation: slideOut 0.3s ease forwards;
 }
+/* Modo Oscuro */
+body.dark-mode {
+    background-color: #1a1a2e;
+    color: #eee;
+}
+
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode p {
+    color: #eee;
+}
+
+body.dark-mode #formulario-envio,
+body.dark-mode #contenedor-envios,
+body.dark-mode .tarjeta,
+body.dark-mode #dashboard > div,
+body.dark-mode .asignacion,
+body.dark-mode .form-mensajero {
+    background-color: #16213e;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    color: #eee;
+}
+
+body.dark-mode table {
+    background-color: #0f0f23;
+}
+
+body.dark-mode th {
+    background-color: #0a0a1a;
+    color: #eee;
+}
+
+body.dark-mode td {
+    border-bottom-color: #2a2a3a;
+    color: #ddd;
+}
+
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea {
+    background-color: #0f0f23;
+    border-color: #2a2a3a;
+    color: #eee;
+}
+
+body.dark-mode input::placeholder {
+    color: #888;
+}
+
+body.dark-mode .toast {
+    background-color: #16213e;
+    color: #eee;
+}
+
+body.dark-mode .toast-close:hover {
+    background-color: #2a2a3a;
+}
+
+body.dark-mode .btn-volver {
+    background-color: #3498db;
+}
+
+body.dark-mode .btn-agregar {
+    background-color: #27ae60;
+}
+
+body.dark-mode .btn-editar {
+    background-color: #f39c12;
+}
+
+body.dark-mode .btn-eliminar {
+    background-color: #e74c3c;
+}
+/* Modo Oscuro */
+body.dark-mode {
+    background-color: #1a1a2e;
+    color: #eee;
+}
+
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode p {
+    color: #eee;
+}
+
+body.dark-mode #formulario-envio,
+body.dark-mode #contenedor-envios,
+body.dark-mode .tarjeta,
+body.dark-mode #dashboard > div,
+body.dark-mode .asignacion,
+body.dark-mode .form-mensajero {
+    background-color: #16213e;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    color: #eee;
+}
+
+body.dark-mode table {
+    background-color: #0f0f23;
+}
+
+body.dark-mode th {
+    background-color: #0a0a1a;
+    color: #eee;
+}
+
+body.dark-mode td {
+    border-bottom-color: #2a2a3a;
+    color: #ddd;
+}
+
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea {
+    background-color: #0f0f23;
+    border-color: #2a2a3a;
+    color: #eee;
+}
+
+body.dark-mode input::placeholder {
+    color: #888;
+}
+
+body.dark-mode .toast {
+    background-color: #16213e;
+    color: #eee;
+}
+
+body.dark-mode .toast-close:hover {
+    background-color: #2a2a3a;
+}
+
+body.dark-mode .btn-volver {
+    background-color: #3498db;
+}
+
+body.dark-mode .btn-agregar {
+    background-color: #27ae60;
+}
+
+body.dark-mode .btn-editar {
+    background-color: #f39c12;
+}
+
+body.dark-mode .btn-eliminar {
+    background-color: #e74c3c;
+}
