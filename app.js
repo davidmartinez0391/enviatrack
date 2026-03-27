@@ -2,7 +2,6 @@
 let envios = [];
 let proximoId = 1;
 
-// Función para normalizar texto (quitar tildes)
 function normalizarTexto(texto) {
     return texto.toLowerCase()
         .replace(/á/g, 'a')
@@ -14,7 +13,6 @@ function normalizarTexto(texto) {
         .replace(/ü/g, 'u');
 }
 
-// Función para mostrar notificaciones
 function mostrarNotificacion(mensaje, tipo = 'success', titulo = '') {
     const container = document.getElementById('toast-container');
     if (!container) return;
@@ -87,11 +85,11 @@ function mostrarTabla() {
         });
     }
     
-    let html = `<table style="width:100%; border-collapse:collapse;"><thead style="background:#333; color:white;">换成了
+    let html = `<table style="width:100%; border-collapse:collapse;"><thead style="background:#333; color:white;"><tr>
         <th style="padding:10px;">ID</th><th style="padding:10px;">Destinatario</th><th style="padding:10px;">Dirección</th>
         <th style="padding:10px;">Teléfono</th><th style="padding:10px;">Estado</th><th style="padding:10px;">Mensajero</th>
         <th style="padding:10px;">Fecha Creación</th><th style="padding:10px;">Fecha Entrega</th><th style="padding:10px;">Acciones</th>
-    </tr></thead><tbody>`;
+     </tr></thead><tbody>`;
     
     for (let e of filtrados) {
         let estadoText = { 'pendiente': '⏳ Pendiente', 'en_ruta': '🚚 En ruta', 'entregado': '✅ Entregado' };
@@ -124,7 +122,7 @@ function mostrarTabla() {
             <td style="padding:8px;">${e.fechaCreacion}</td>
             <td style="padding:8px;">${e.fechaEntrega || '—'}</td>
             <td style="padding:8px; text-align:center;">${botones}</td>
-        </tr>`;
+         </tr>`;
     }
     
     html += `</tbody></table>`;
