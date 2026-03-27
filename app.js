@@ -118,13 +118,13 @@ async function cargarEnvios() {
         
         if (error) throw error;
         envios = data || [];
-        console.log(`✅ Cargados ${envios.length} envíos`);
+        console.log(`✅ Cargados ${envios.length} envíos desde la nube`);
         mostrarTabla();
         actualizarGraficos();
         actualizarContadores();
     } catch (error) {
         console.error('Error al cargar envíos:', error);
-        mostrarNotificacion('Error de conexión', 'error', 'Error');
+        mostrarNotificacion('Error de conexión con la nube', 'error', 'Error');
         envios = [];
         mostrarTabla();
     }
@@ -140,7 +140,7 @@ async function guardarEnvio(envio) {
         await cargarEnvios();
     } catch (error) {
         console.error('Error al guardar:', error);
-        mostrarNotificacion('Error al guardar', 'error', 'Error');
+        mostrarNotificacion('Error al guardar en la nube', 'error', 'Error');
     }
 }
 
@@ -155,7 +155,7 @@ async function eliminarEnvioDB(id) {
         await cargarEnvios();
     } catch (error) {
         console.error('Error al eliminar:', error);
-        mostrarNotificacion('Error al eliminar', 'error', 'Error');
+        mostrarNotificacion('Error al eliminar de la nube', 'error', 'Error');
     }
 }
 
@@ -174,11 +174,7 @@ function mostrarTabla() {
         });
     }
     
-    let html = `<table style="width:100%; border-collapse:collapse;"><thead style="background:#333; color:white;"><tr>
-        <th style="padding:10px;">ID</th><th style="padding:10px;">Destinatario</th><th style="padding:10px;">Dirección</th>
-        <th style="padding:10px;">Teléfono</th><th style="padding:10px;">Estado</th><th style="padding:10px;">Mensajero</th>
-        <th style="padding:10px;">Fecha Creación</th><th style="padding:10px;">Fecha Entrega</th><th style="padding:10px;">Acciones</th>
-    </tr></thead><tbody>`;
+    let html = `<table style="width:100%; border-collapse:collapse;"><thead style="background:#333; color:white;">$\n        <th style="padding:10px;">ID</th><th style="padding:10px;">Destinatario</th><th style="padding:10px;">Dirección</th>\n        <th style="padding:10px;">Teléfono</th><th style="padding:10px;">Estado</th><th style="padding:10px;">Mensajero</th>\n        <th style="padding:10px;">Fecha Creación</th><th style="padding:10px;">Fecha Entrega</th><th style="padding:10px;">Acciones</th>\n     </thead><tbody>`;
     
     for (let e of filtrados) {
         let estadoText = { 'pendiente': '⏳ Pendiente', 'en_ruta': '🚚 En ruta', 'entregado': '✅ Entregado' };
@@ -204,17 +200,7 @@ function mostrarTabla() {
         const fechaCreacion = e.fecha_creacion ? new Date(e.fecha_creacion).toLocaleString() : (e.fechaCreacion || '—');
         const fechaEntrega = e.fecha_entrega ? new Date(e.fecha_entrega).toLocaleString() : (e.fechaEntrega || '—');
         
-        html += `<tr style="border-bottom:1px solid #ddd;">
-            <td style="padding:8px; text-align:center;">${e.id}</td>
-            <td style="padding:8px;">${e.destinatario}</td>
-            <td style="padding:8px;">${e.direccion}</td>
-            <td style="padding:8px;">${e.telefono}</td>
-            <td style="padding:8px;" class="${estadoClass[e.estado]}">${estadoText[e.estado]}</td>
-            <td style="padding:8px;">${e.mensajero || 'Sin asignar'}</td>
-            <td style="padding:8px;">${fechaCreacion}</td>
-            <td style="padding:8px;">${fechaEntrega}</td>
-            <td style="padding:8px; text-align:center;">${botones}</td>
-        </tr>`;
+        html += `<tr style="border-bottom:1px solid #ddd;">\n            <td style="padding:8px; text-align:center;">${e.id}</td>\n            <td style="padding:8px;">${e.destinatario}</td>\n            <td style="padding:8px;">${e.direccion}</td>\n            <td style="padding:8px;">${e.telefono}</td>\n            <td style="padding:8px;" class="${estadoClass[e.estado]}">${estadoText[e.estado]}</td>\n            <td style="padding:8px;">${e.mensajero || 'Sin asignar'}</td>\n            <td style="padding:8px;">${fechaCreacion}</td>\n            <td style="padding:8px;">${fechaEntrega}</td>\n            <td style="padding:8px; text-align:center;">${botones}</td>\n          </tr>`;
     }
     
     html += `</tbody></table>`;
