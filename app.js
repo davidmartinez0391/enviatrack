@@ -1,5 +1,5 @@
 // Configuración de Supabase
-const SUPABASE_URL = 'https://prenermnmqexgzpbmcfm.supabase.co';
+const SUPABASE_URL = 'https://prenernmnqexgzpbmcfm.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InByZW5lcm5tbnFleGd6cGJtY2ZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMjc1NTQsImV4cCI6MjA4OTgwMzU1NH0.VfxRvPnNRv5yXG0SabqPgU8tVH4pEbj7D6YRuNcSTL8';
 
 // Cliente de Supabase
