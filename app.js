@@ -1,5 +1,5 @@
-// Configuración de Supabase
-const SUPABASE_URL = 'https://prenernmnqexgzpbmcfm.supabase.co';
+// Configuración de Supabase - URL CORRECTA
+const SUPABASE_URL = 'https://prenermnmqexgzpbmcfm.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InByZW5lcm5tbnFleGd6cGJtY2ZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMjc1NTQsImV4cCI6MjA4OTgwMzU1NH0.VfxRvPnNRv5yXG0SabqPgU8tVH4pEbj7D6YRuNcSTL8';
 
 // Cliente de Supabase
@@ -46,6 +46,7 @@ function mostrarNotificacion(mensaje, tipo = 'success', titulo = '') {
 
 async function cargarEnvios() {
     try {
+        console.log('🔄 Conectando a Supabase...');
         const { data, error } = await supabaseClient
             .from('envios')
             .select('*')
@@ -59,7 +60,7 @@ async function cargarEnvios() {
         actualizarContadores();
     } catch (error) {
         console.error('Error al cargar envíos:', error);
-        mostrarNotificacion('Error de conexión con la nube', 'error', 'Error');
+        mostrarNotificacion('Error de conexión con la nube. Verifica tu internet.', 'error', 'Error');
         envios = [];
         mostrarTabla();
     }
@@ -109,11 +110,16 @@ function mostrarTabla() {
         });
     }
     
+    if (filtrados.length === 0 && envios.length === 0) {
+        contenedor.innerHTML = '<p style="text-align:center; padding:20px;">🔄 Cargando datos desde la nube...</p>';
+        return;
+    }
+    
     let html = `<table style="width:100%; border-collapse:collapse;"><thead style="background:#333; color:white;"><tr>
         <th style="padding:10px;">ID</th><th style="padding:10px;">Destinatario</th><th style="padding:10px;">Dirección</th>
         <th style="padding:10px;">Teléfono</th><th style="padding:10px;">Estado</th><th style="padding:10px;">Mensajero</th>
         <th style="padding:10px;">Fecha Creación</th><th style="padding:10px;">Fecha Entrega</th><th style="padding:10px;">Acciones</th>
-    </tr></thead><tbody>`;
+     </tr></thead><tbody>`;
     
     for (let e of filtrados) {
         let estadoText = { 'pendiente': '⏳ Pendiente', 'en_ruta': '🚚 En ruta', 'entregado': '✅ Entregado' };
@@ -149,13 +155,13 @@ function mostrarTabla() {
             <td style="padding:8px;">${fechaCreacion}</td>
             <td style="padding:8px;">${fechaEntrega}</td>
             <td style="padding:8px; text-align:center;">${botones}</td>
-        </tr>`;
+         </tr>`;
     }
     
     html += `</tbody></table>`;
     
-    if (filtrados.length === 0) {
-        html = '<p style="text-align:center; padding:20px;">No hay envíos</p>';
+    if (filtrados.length === 0 && envios.length > 0) {
+        html = '<p style="text-align:center; padding:20px;">No hay envíos que coincidan con la búsqueda</p>';
     }
     
     contenedor.innerHTML = html;
@@ -166,22 +172,29 @@ function actualizarContadores() {
     let ruta = envios.filter(e => e.estado === 'en_ruta').length;
     let entre = envios.filter(e => e.estado === 'entregado').length;
     
-    document.getElementById('contador-pendiente').textContent = pend;
-    document.getElementById('contador-en-ruta').textContent = ruta;
-    document.getElementById('contador-entregado').textContent = entre;
-    document.getElementById('contador-total').textContent = envios.length;
+    const p1 = document.getElementById('contador-pendiente');
+    const p2 = document.getElementById('contador-en-ruta');
+    const p3 = document.getElementById('contador-entregado');
+    const p4 = document.getElementById('contador-total');
+    
+    if (p1) p1.textContent = pend;
+    if (p2) p2.textContent = ruta;
+    if (p3) p3.textContent = entre;
+    if (p4) p4.textContent = envios.length;
 }
 
 let graficoEstados = null;
 let graficoEntregas = null;
 
 function actualizarGraficos() {
+    if (typeof Chart === 'undefined') return;
+    
     const pendientes = envios.filter(e => e.estado === 'pendiente').length;
     const enRuta = envios.filter(e => e.estado === 'en_ruta').length;
     const entregados = envios.filter(e => e.estado === 'entregado').length;
     
     const ctxEstados = document.getElementById('graficoEstados');
-    if (ctxEstados && typeof Chart !== 'undefined') {
+    if (ctxEstados) {
         if (graficoEstados) graficoEstados.destroy();
         graficoEstados = new Chart(ctxEstados, {
             type: 'doughnut',
@@ -212,7 +225,7 @@ function actualizarGraficos() {
     }
     
     const ctxEntregas = document.getElementById('graficoEntregas');
-    if (ctxEntregas && typeof Chart !== 'undefined') {
+    if (ctxEntregas) {
         if (graficoEntregas) graficoEntregas.destroy();
         graficoEntregas = new Chart(ctxEntregas, {
             type: 'line',
@@ -353,6 +366,7 @@ function toggleDarkMode() {
 
 // Inicializar Supabase y cargar datos
 async function init() {
+    console.log('🚀 Iniciando EnvíaTrack con Supabase...');
     supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     await cargarEnvios();
 }
@@ -361,6 +375,7 @@ async function init() {
 document.getElementById('form-nuevo-envio')?.addEventListener('submit', (e) => { e.preventDefault(); agregarEnvio(); });
 document.getElementById('buscador')?.addEventListener('input', filtrarEnvios);
 document.getElementById('btn-exportar')?.addEventListener('click', exportarCSV);
+
 const btnDarkMode = document.getElementById('btn-dark-mode');
 if (btnDarkMode) {
     btnDarkMode.addEventListener('click', toggleDarkMode);
