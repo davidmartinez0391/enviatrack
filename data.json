@@ -1,0 +1,8 @@
+{
+  "mensajeros": [
+    { "codigo": "MEN001", "nombre": "Pedro Martínez", "telefono": "3109876543" },
+    { "codigo": "MEN002", "nombre": "Luis Torres", "telefono": "3155558888" },
+    { "codigo": "MEN003", "nombre": "Ana Ramírez", "telefono": "3001112233" }
+  ],
+  "envios": []
+}
