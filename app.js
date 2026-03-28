@@ -1,75 +1,6 @@
-// Configuración de Supabase
-const SUPABASE_URL = 'https://prenermnmqexgzpbmcfm.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InByZW5lcm5tbnFleGd6cGJtY2ZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMjc1NTQsImV4cCI6MjA4OTgwMzU1NH0.VfxRvPnNRv5yXG0SabqPgU8tVH4pEbj7D6YRuNcSTL8';
-
-let supabaseClient = null;
+// Versión con localStorage - Funciona sin internet
 let envios = [];
-let usuarioActual = null;
-
-// ========== AUTENTICACIÓN ==========
-
-async function iniciarSesion() {
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-    
-    if (!email || !password) {
-        mostrarNotificacion('Completa todos los campos', 'warning', 'Campos incompletos');
-        return;
-    }
-    
-    mostrarNotificacion('Iniciando sesión...', 'info', 'Conectando');
-    
-    const { data, error } = await supabaseClient.auth.signInWithPassword({
-        email: email,
-        password: password
-    });
-    
-    if (error) {
-        console.error('Error de login:', error);
-        mostrarNotificacion('Email o contraseña incorrectos', 'error', 'Error de autenticación');
-        return;
-    }
-    
-    usuarioActual = data.user;
-    localStorage.setItem('enviaTrack_user', JSON.stringify({ email: usuarioActual.email }));
-    
-    mostrarNotificacion(`Bienvenido ${usuarioActual.email}`, 'success', 'Sesión iniciada');
-    
-    // Ocultar login y mostrar panel
-    document.getElementById('login-panel').style.display = 'none';
-    document.getElementById('main-panel').style.display = 'block';
-    
-    // Cargar datos
-    await cargarEnvios();
-}
-
-async function cerrarSesion() {
-    await supabaseClient.auth.signOut();
-    usuarioActual = null;
-    localStorage.removeItem('enviaTrack_user');
-    
-    // Mostrar login y ocultar panel
-    document.getElementById('login-panel').style.display = 'block';
-    document.getElementById('main-panel').style.display = 'none';
-    
-    mostrarNotificacion('Sesión cerrada', 'info', 'Hasta luego');
-}
-
-async function verificarSesion() {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    
-    if (session) {
-        usuarioActual = session.user;
-        document.getElementById('login-panel').style.display = 'none';
-        document.getElementById('main-panel').style.display = 'block';
-        await cargarEnvios();
-    } else {
-        document.getElementById('login-panel').style.display = 'block';
-        document.getElementById('main-panel').style.display = 'none';
-    }
-}
-
-// ========== FUNCIONES PRINCIPALES ==========
+let proximoId = 1;
 
 function normalizarTexto(texto) {
     return texto.toLowerCase()
@@ -109,54 +40,35 @@ function mostrarNotificacion(mensaje, tipo = 'success', titulo = '') {
     }, 3000);
 }
 
-async function cargarEnvios() {
-    try {
-        const { data, error } = await supabaseClient
-            .from('envios')
-            .select('*')
-            .order('id', { ascending: false });
-        
-        if (error) throw error;
-        envios = data || [];
-        console.log(`✅ Cargados ${envios.length} envíos desde la nube`);
-        mostrarTabla();
-        actualizarGraficos();
-        actualizarContadores();
-    } catch (error) {
-        console.error('Error al cargar envíos:', error);
-        mostrarNotificacion('Error de conexión con la nube', 'error', 'Error');
-        envios = [];
-        mostrarTabla();
+function cargarDatos() {
+    let datos = localStorage.getItem('enviaTrack_envios');
+    let idGuardado = localStorage.getItem('enviaTrack_proximoId');
+    
+    if (datos) {
+        envios = JSON.parse(datos);
+        console.log('✅ Cargados ' + envios.length + ' envíos');
+    } else {
+        envios = [
+            { id: 1, destinatario: "María González", direccion: "Calle 45 # 20-30, Bogotá", telefono: "3001234567", estado: "pendiente", mensajero: "Luis Torres", fechaCreacion: "2025-03-22 10:30" },
+            { id: 2, destinatario: "Carlos Rodríguez", direccion: "Carrera 15 # 88-12, Medellín", telefono: "3109876543", estado: "entregado", mensajero: "Pedro Martínez", fechaCreacion: "2025-03-22 09:15", fechaEntrega: "2026-03-27 20:43:50" },
+            { id: 3, destinatario: "Ana Lucía Fernández", direccion: "Avenida 19 # 123-45, Cali", telefono: "3155558888", estado: "entregado", mensajero: "Luis Torres", fechaCreacion: "2025-03-21 16:20", fechaEntrega: "2025-03-21 17:45" },
+            { id: 4, destinatario: "David Martínez", direccion: "Cra 53 # 79-20", telefono: "3027414016", estado: "pendiente", mensajero: null, fechaCreacion: new Date().toLocaleString() }
+        ];
+        proximoId = 5;
+        guardarDatos();
+    }
+    
+    if (idGuardado) {
+        proximoId = parseInt(idGuardado);
+    } else if (envios.length > 0) {
+        let ids = envios.map(e => e.id);
+        proximoId = Math.max(...ids, 0) + 1;
     }
 }
 
-async function guardarEnvio(envio) {
-    try {
-        const { error } = await supabaseClient
-            .from('envios')
-            .upsert(envio);
-        
-        if (error) throw error;
-        await cargarEnvios();
-    } catch (error) {
-        console.error('Error al guardar:', error);
-        mostrarNotificacion('Error al guardar en la nube', 'error', 'Error');
-    }
-}
-
-async function eliminarEnvioDB(id) {
-    try {
-        const { error } = await supabaseClient
-            .from('envios')
-            .delete()
-            .eq('id', id);
-        
-        if (error) throw error;
-        await cargarEnvios();
-    } catch (error) {
-        console.error('Error al eliminar:', error);
-        mostrarNotificacion('Error al eliminar de la nube', 'error', 'Error');
-    }
+function guardarDatos() {
+    localStorage.setItem('enviaTrack_envios', JSON.stringify(envios));
+    localStorage.setItem('enviaTrack_proximoId', proximoId);
 }
 
 function mostrarTabla() {
@@ -174,7 +86,11 @@ function mostrarTabla() {
         });
     }
     
-    let html = `<table style="width:100%; border-collapse:collapse;"><thead style="background:#333; color:white;">$\n        <th style="padding:10px;">ID</th><th style="padding:10px;">Destinatario</th><th style="padding:10px;">Dirección</th>\n        <th style="padding:10px;">Teléfono</th><th style="padding:10px;">Estado</th><th style="padding:10px;">Mensajero</th>\n        <th style="padding:10px;">Fecha Creación</th><th style="padding:10px;">Fecha Entrega</th><th style="padding:10px;">Acciones</th>\n     </thead><tbody>`;
+    let html = `<table style="width:100%; border-collapse:collapse;"><thead style="background:#333; color:white;"><tr>
+        <th style="padding:10px;">ID</th><th style="padding:10px;">Destinatario</th><th style="padding:10px;">Dirección</th>
+        <th style="padding:10px;">Teléfono</th><th style="padding:10px;">Estado</th><th style="padding:10px;">Mensajero</th>
+        <th style="padding:10px;">Fecha Creación</th><th style="padding:10px;">Fecha Entrega</th><th style="padding:10px;">Acciones</th>
+     </tr></thead><tbody>`;
     
     for (let e of filtrados) {
         let estadoText = { 'pendiente': '⏳ Pendiente', 'en_ruta': '🚚 En ruta', 'entregado': '✅ Entregado' };
@@ -197,10 +113,17 @@ function mostrarTabla() {
             botones += `<button onclick="eliminarEnvio(${e.id})" style="background:#e74c3c; color:white; padding:5px 10px; margin-left:5px; border:none; border-radius:3px;">🗑️ Eliminar</button>`;
         }
         
-        const fechaCreacion = e.fecha_creacion ? new Date(e.fecha_creacion).toLocaleString() : (e.fechaCreacion || '—');
-        const fechaEntrega = e.fecha_entrega ? new Date(e.fecha_entrega).toLocaleString() : (e.fechaEntrega || '—');
-        
-        html += `<tr style="border-bottom:1px solid #ddd;">\n            <td style="padding:8px; text-align:center;">${e.id}</td>\n            <td style="padding:8px;">${e.destinatario}</td>\n            <td style="padding:8px;">${e.direccion}</td>\n            <td style="padding:8px;">${e.telefono}</td>\n            <td style="padding:8px;" class="${estadoClass[e.estado]}">${estadoText[e.estado]}</td>\n            <td style="padding:8px;">${e.mensajero || 'Sin asignar'}</td>\n            <td style="padding:8px;">${fechaCreacion}</td>\n            <td style="padding:8px;">${fechaEntrega}</td>\n            <td style="padding:8px; text-align:center;">${botones}</td>\n          </tr>`;
+        html += `<tr style="border-bottom:1px solid #ddd;">
+            <td style="padding:8px; text-align:center;">${e.id}</td>
+            <td style="padding:8px;">${e.destinatario}</td>
+            <td style="padding:8px;">${e.direccion}</td>
+            <td style="padding:8px;">${e.telefono}</td>
+            <td style="padding:8px;" class="${estadoClass[e.estado]}">${estadoText[e.estado]}</td>
+            <td style="padding:8px;">${e.mensajero || 'Sin asignar'}</td>
+            <td style="padding:8px;">${e.fechaCreacion}</td>
+            <td style="padding:8px;">${e.fechaEntrega || '—'}</td>
+            <td style="padding:8px; text-align:center;">${botones}</td>
+         </tr>`;
     }
     
     html += `</tbody></table>`;
@@ -212,9 +135,7 @@ function mostrarTabla() {
     }
     
     contenedor.innerHTML = html;
-}
-
-function actualizarContadores() {
+    
     let pend = envios.filter(e => e.estado === 'pendiente').length;
     let ruta = envios.filter(e => e.estado === 'en_ruta').length;
     let entre = envios.filter(e => e.estado === 'entregado').length;
@@ -223,6 +144,8 @@ function actualizarContadores() {
     document.getElementById('contador-en-ruta').textContent = ruta;
     document.getElementById('contador-entregado').textContent = entre;
     document.getElementById('contador-total').textContent = envios.length;
+    
+    actualizarGraficos();
 }
 
 let graficoEstados = null;
@@ -258,9 +181,8 @@ function actualizarGraficos() {
         ultimos7Dias.push(fechaStr);
         
         const entregasDia = envios.filter(e => {
-            const fechaEntrega = e.fecha_entrega || e.fechaEntrega;
-            if (!fechaEntrega) return false;
-            return new Date(fechaEntrega).toLocaleDateString() === fechaStr;
+            if (!e.fechaEntrega) return false;
+            return new Date(e.fechaEntrega).toLocaleDateString() === fechaStr;
         }).length;
         entregasPorDia.push(entregasDia);
     }
@@ -279,35 +201,40 @@ function actualizarGraficos() {
     }
 }
 
-async function iniciarRuta(id) {
+function iniciarRuta(id) {
     let e = envios.find(x => x.id === id);
     if (e) {
         e.estado = 'en_ruta';
         if (!e.mensajero) e.mensajero = 'Mensajero Asignado';
-        await guardarEnvio(e);
+        guardarDatos();
+        mostrarTabla();
         mostrarNotificacion(`Envío #${id} está en RUTA`, 'info', 'Ruta iniciada');
     }
 }
 
-async function marcarEntregado(id) {
+function marcarEntregado(id) {
     let e = envios.find(x => x.id === id);
     if (e) {
         e.estado = 'entregado';
-        e.fecha_entrega = new Date().toISOString();
-        await guardarEnvio(e);
+        e.fechaEntrega = new Date().toLocaleString();
+        guardarDatos();
+        mostrarTabla();
         mostrarNotificacion(`Envío #${id} entregado`, 'success', 'Entrega completada');
     }
 }
 
-async function eliminarEnvio(id) {
+function eliminarEnvio(id) {
     let e = envios.find(x => x.id === id);
     if (e && confirm(`¿Eliminar envío #${id} de ${e.destinatario}?`)) {
-        await eliminarEnvioDB(id);
+        let idx = envios.findIndex(x => x.id === id);
+        envios.splice(idx, 1);
+        guardarDatos();
+        mostrarTabla();
         mostrarNotificacion(`Envío #${id} eliminado`, 'warning', 'Eliminado');
     }
 }
 
-async function editarEnvio(id) {
+function editarEnvio(id) {
     const envio = envios.find(e => e.id === id);
     if (!envio) {
         mostrarNotificacion('Envío no encontrado', 'error', 'Error');
@@ -327,11 +254,12 @@ async function editarEnvio(id) {
     envio.direccion = nuevaDireccion;
     envio.telefono = nuevoTelefono;
     
-    await guardarEnvio(envio);
+    guardarDatos();
+    mostrarTabla();
     mostrarNotificacion(`Envío #${id} actualizado`, 'success', 'Editado');
 }
 
-async function agregarEnvio() {
+function agregarEnvio() {
     let dest = document.getElementById('destinatario').value;
     let dir = document.getElementById('direccion').value;
     let tel = document.getElementById('telefono').value;
@@ -341,25 +269,26 @@ async function agregarEnvio() {
         return false;
     }
     
-    let nuevoId = envios.length > 0 ? Math.max(...envios.map(e => e.id), 0) + 1 : 1;
-    
     let nuevo = {
-        id: nuevoId,
+        id: proximoId,
         destinatario: dest,
         direccion: dir,
         telefono: tel,
         estado: 'pendiente',
         mensajero: null,
-        fecha_creacion: new Date().toISOString()
+        fechaCreacion: new Date().toLocaleString()
     };
     
-    await guardarEnvio(nuevo);
+    envios.push(nuevo);
+    proximoId++;
+    guardarDatos();
+    mostrarTabla();
     
     document.getElementById('destinatario').value = '';
     document.getElementById('direccion').value = '';
     document.getElementById('telefono').value = '';
     
-    mostrarNotificacion(`Envío #${nuevoId} registrado`, 'success', 'Envío creado');
+    mostrarNotificacion(`Envío #${nuevo.id} registrado`, 'success', 'Envío creado');
     return false;
 }
 
@@ -371,10 +300,8 @@ function exportarCSV() {
     let contenido = 'ID,Destinatario,Dirección,Teléfono,Estado,Mensajero,Fecha Creación,Fecha Entrega\n';
     for (let e of envios) {
         let estadoText = { 'pendiente': 'Pendiente', 'en_ruta': 'En Ruta', 'entregado': 'Entregado' };
-        const fechaCreacion = e.fecha_creacion ? new Date(e.fecha_creacion).toLocaleString() : (e.fechaCreacion || '');
-        const fechaEntrega = e.fecha_entrega ? new Date(e.fecha_entrega).toLocaleString() : (e.fechaEntrega || '');
         contenido += `${e.id},${e.destinatario},${e.direccion},${e.telefono},`;
-        contenido += `${estadoText[e.estado]},${e.mensajero || 'Sin asignar'},${fechaCreacion},${fechaEntrega}\n`;
+        contenido += `${estadoText[e.estado]},${e.mensajero || 'Sin asignar'},${e.fechaCreacion},${e.fechaEntrega || ''}\n`;
     }
     let blob = new Blob(['\uFEFF' + contenido], { type: 'text/csv;charset=utf-8;' });
     let link = document.createElement('a');
@@ -404,27 +331,12 @@ function toggleDarkMode() {
 }
 
 // Inicializar
-async function init() {
-    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    
-    // Configurar eventos
-    document.getElementById('btn-login')?.addEventListener('click', iniciarSesion);
-    document.getElementById('btn-logout')?.addEventListener('click', cerrarSesion);
-    document.getElementById('form-nuevo-envio')?.addEventListener('submit', (e) => { e.preventDefault(); agregarEnvio(); });
-    document.getElementById('buscador')?.addEventListener('input', filtrarEnvios);
-    document.getElementById('btn-exportar')?.addEventListener('click', exportarCSV);
-    document.getElementById('btn-dark-mode')?.addEventListener('click', toggleDarkMode);
-    
-    // Permitir login con Enter
-    document.getElementById('login-password')?.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') iniciarSesion();
-    });
-    document.getElementById('login-email')?.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') iniciarSesion();
-    });
-    
-    initDarkMode();
-    await verificarSesion();
-}
+cargarDatos();
+mostrarTabla();
+initDarkMode();
 
-init();
+// Eventos
+document.getElementById('form-nuevo-envio')?.addEventListener('submit', (e) => { e.preventDefault(); agregarEnvio(); });
+document.getElementById('buscador')?.addEventListener('input', filtrarEnvios);
+document.getElementById('btn-exportar')?.addEventListener('click', exportarCSV);
+document.getElementById('btn-dark-mode')?.addEventListener('click', toggleDarkMode);
