@@ -1,5 +1,15 @@
 let listaEnvios = [];
 let siguienteId = 1;
+// Sanitizar texto para prevenir XSS
+function sanitizar(texto) {
+    if (!texto) return '';
+    return texto
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
 
 // ─── Utilidades ───────────────────────────────────────────────────────────────
 
@@ -298,9 +308,9 @@ function editarEnvio(id) {
 }
 
 function agregarEnvio() {
-    const dest = document.getElementById('destinatario').value.trim();
-    const dir  = document.getElementById('direccion').value.trim();
-    const tel  = document.getElementById('telefono').value.trim();
+    let dest = sanitizar(document.getElementById('destinatario').value.trim());
+    let dir = sanitizar(document.getElementById('direccion').value.trim());
+    let tel = sanitizar(document.getElementById('telefono').value.trim());
 
     if (!dest || !dir || !tel) {
         mostrarMensaje('Completa todos los campos', 'warning', 'Campos incompletos');
@@ -389,31 +399,54 @@ const USUARIOS_AUTORIZADOS = [
 function iniciarSesion() {
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
-
+    
+    // === AGREGAR ESTAS LÍNEAS DESPUÉS DE OBTENER email y password ===
+    // Límite de intentos fallidos
+    let intentos = localStorage.getItem('intentos_fallidos');
+    if (intentos === null) intentos = 0;
+    else intentos = parseInt(intentos);
+    
+    if (intentos >= 5) {
+        mostrarMensaje('Demasiados intentos. Espera 5 minutos.', 'error', 'Acceso bloqueado');
+        // Limpiar después de 5 minutos
+        setTimeout(() => {
+            localStorage.removeItem('intentos_fallidos');
+        }, 300000);
+        return;
+    }
+    // ================================================================
+    
     if (!email || !password) {
         mostrarMensaje('Ingresa tu correo y contraseña', 'warning', 'Campos vacíos');
         return;
     }
 
     const usuarioValido = USUARIOS_AUTORIZADOS.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
-
+    
     if (usuarioValido) {
+        // === AGREGAR ESTA LÍNEA ===
+        localStorage.removeItem('intentos_fallidos');
+        // ==========================
         localStorage.setItem('enviaTrack_sesion', 'activa');
         localStorage.setItem('enviaTrack_usuario', email);
         document.getElementById('login-panel').style.display = 'none';
         document.getElementById('main-panel').style.display = 'block';
         mostrarMensaje(`Bienvenido, ${email}`, 'success', 'Sesión iniciada');
         
-        // Solo cargar datos si es admin.js o app.js según corresponda
         if (typeof cargarDatos === 'function') cargarDatos();
         if (typeof mostrarTabla === 'function') mostrarTabla();
         if (typeof mostrarMensajeros === 'function') {
             mostrarMensajeros();
-            actualizarSelects();
-            actualizarGraficoMensajeros();
+            if (typeof actualizarSelects === 'function') actualizarSelects();
+            if (typeof actualizarGraficoMensajeros === 'function') actualizarGraficoMensajeros();
         }
     } else {
-        mostrarMensaje('Credenciales incorrectas', 'error', 'Error de acceso');
+        // === AGREGAR ESTAS LÍNEAS ===
+        intentos++;
+        localStorage.setItem('intentos_fallidos', intentos);
+        const restantes = 5 - intentos;
+        mostrarMensaje(`Credenciales incorrectas. Te quedan ${restantes} intentos.`, 'error', 'Error de acceso');
+        // ============================
     }
 }
 

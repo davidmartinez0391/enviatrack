@@ -1,6 +1,16 @@
 // Variables globales
 let mensajeros = [];
 let envios = [];
+// Sanitizar texto para prevenir XSS
+function sanitizar(texto) {
+    if (!texto) return '';
+    return texto
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
 
 // Usuarios autorizados (mismo que en app.js)
 const USUARIOS_AUTORIZADOS = [
@@ -40,31 +50,54 @@ function mostrarMensaje(mensaje, tipo = 'success', titulo = '') {
 function iniciarSesion() {
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
-
+    
+    // === AGREGAR ESTAS LÍNEAS DESPUÉS DE OBTENER email y password ===
+    // Límite de intentos fallidos
+    let intentos = localStorage.getItem('intentos_fallidos');
+    if (intentos === null) intentos = 0;
+    else intentos = parseInt(intentos);
+    
+    if (intentos >= 5) {
+        mostrarMensaje('Demasiados intentos. Espera 5 minutos.', 'error', 'Acceso bloqueado');
+        // Limpiar después de 5 minutos
+        setTimeout(() => {
+            localStorage.removeItem('intentos_fallidos');
+        }, 300000);
+        return;
+    }
+    // ================================================================
+    
     if (!email || !password) {
         mostrarMensaje('Ingresa tu correo y contraseña', 'warning', 'Campos vacíos');
         return;
     }
 
     const usuarioValido = USUARIOS_AUTORIZADOS.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
-
+    
     if (usuarioValido) {
+        // === AGREGAR ESTA LÍNEA ===
+        localStorage.removeItem('intentos_fallidos');
+        // ==========================
         localStorage.setItem('enviaTrack_sesion', 'activa');
         localStorage.setItem('enviaTrack_usuario', email);
         document.getElementById('login-panel').style.display = 'none';
         document.getElementById('main-panel').style.display = 'block';
         mostrarMensaje(`Bienvenido, ${email}`, 'success', 'Sesión iniciada');
         
-        // Solo cargar datos si es admin.js o app.js según corresponda
         if (typeof cargarDatos === 'function') cargarDatos();
         if (typeof mostrarTabla === 'function') mostrarTabla();
         if (typeof mostrarMensajeros === 'function') {
             mostrarMensajeros();
-            actualizarSelects();
-            actualizarGraficoMensajeros();
+            if (typeof actualizarSelects === 'function') actualizarSelects();
+            if (typeof actualizarGraficoMensajeros === 'function') actualizarGraficoMensajeros();
         }
     } else {
-        mostrarMensaje('Credenciales incorrectas', 'error', 'Error de acceso');
+        // === AGREGAR ESTAS LÍNEAS ===
+        intentos++;
+        localStorage.setItem('intentos_fallidos', intentos);
+        const restantes = 5 - intentos;
+        mostrarMensaje(`Credenciales incorrectas. Te quedan ${restantes} intentos.`, 'error', 'Error de acceso');
+        // ============================
     }
 }
 
@@ -181,9 +214,9 @@ function actualizarSelects() {
 
 // ─── CRUD Mensajeros ──────────────────────────────────────────────────────────
 function agregarMensajero() {
-    const codigo = document.getElementById('codigo-mensajero').value.trim().toUpperCase();
-    const nombre = document.getElementById('nombre-mensajero').value.trim();
-    const telefono = document.getElementById('telefono-mensajero').value.trim();
+    const codigo = sanitizar(document.getElementById('codigo-mensajero').value.trim().toUpperCase());
+    const nombre = sanitizar(document.getElementById('nombre-mensajero').value.trim());
+    const telefono = sanitizar(document.getElementById('telefono-mensajero').value.trim());
     
     if (!codigo || !nombre || !telefono) {
         mostrarMensaje('Completa todos los campos', 'warning', 'Campos incompletos');

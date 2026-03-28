@@ -169,7 +169,7 @@ function actualizarEstado(id, nuevoEstado) {
 
 // Función de login
 function iniciarSesion() {
-    const codigo = document.getElementById('codigo-mensajero').value.trim().toUpperCase();
+    const codigo = sanitizar(document.getElementById('codigo-mensajero').value.trim().toUpperCase());
     
     if (!codigo) {
         alert('Por favor ingresa tu código de mensajero');
