@@ -42,6 +42,22 @@ async function cargarMensajeros() {
         }
     }
 }
+async function sincronizarEnvios() {
+    try {
+        const response = await fetch('https://davidmartinez0391.github.io/enviatrack/data.json');
+        const data = await response.json();
+        
+        if (data.envios && data.envios.length > 0) {
+            localStorage.setItem('enviaTrack_envios', JSON.stringify(data.envios));
+            console.log('📦 Envíos sincronizados:', data.envios.length);
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error('Error al sincronizar envíos:', error);
+        return false;
+    }
+}
 
 function guardarMensajeros() {
     localStorage.setItem('enviaTrack_mensajeros', JSON.stringify(mensajerosRegistrados));
@@ -196,7 +212,7 @@ function actualizarEstado(id, nuevoEstado) {
 }
 
 // Función de login
-function iniciarSesion() {
+async function iniciarSesion() {
     const codigo = document.getElementById('codigo-mensajero').value.trim().toUpperCase();
     
     if (!codigo) {
@@ -204,8 +220,9 @@ function iniciarSesion() {
         return;
     }
     
-    // Recargar mensajeros para asegurar que están actualizados
-    cargarMensajeros();
+    // Sincronizar mensajeros y envíos
+    await cargarMensajeros();
+    await sincronizarEnvios();
     
     console.log('Buscando código:', codigo);
     console.log('Mensajeros disponibles:', mensajerosRegistrados);
@@ -219,18 +236,15 @@ function iniciarSesion() {
     
     mensajeroActual = mensajero;
     
-    // Ocultar login y mostrar panel
     document.getElementById('login-panel').classList.add('oculto');
     document.getElementById('panel-mensajero').classList.remove('oculto');
     
-    // Mostrar información del mensajero
     document.getElementById('info-mensajero').innerHTML = `
         <strong>👤 Mensajero:</strong> ${mensajeroActual.nombre} | 
         <strong>📱 Código:</strong> ${mensajeroActual.codigo} | 
         <strong>📞 Teléfono:</strong> ${mensajeroActual.telefono}
     `;
     
-    // Cargar sus envíos
     filtrarEnviosMensajero();
     
     console.log(`✅ Mensajero ${mensajeroActual.nombre} ha iniciado sesión`);
@@ -265,3 +279,10 @@ document.getElementById('codigo-mensajero').addEventListener('keypress', functio
 
 // Cargar mensajeros al iniciar
 cargarMensajeros();
+document.getElementById('btn-sincronizar')?.addEventListener('click', async () => {
+    await sincronizarEnvios();
+    if (mensajeroActual) {
+        filtrarEnviosMensajero();
+        alert('✅ Datos sincronizados');
+    }
+});
