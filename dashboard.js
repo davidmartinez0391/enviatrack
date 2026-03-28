@@ -513,6 +513,74 @@ function toggleDarkMode() {
     const btn = document.getElementById('btn-dark-mode');
     if (btn) btn.innerHTML = isDark ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
 }
+// ─── Rastreo de mensajeros ───────────────────────────────────────────────────
+function mostrarRastreo() {
+    const mensajerosConUbicacion = envios.filter(e => e.ubicacion && e.estado === 'en_ruta');
+    if (mensajerosConUbicacion.length === 0) {
+        mostrarMensaje('No hay mensajeros en ruta con ubicación disponible', 'info');
+        return;
+    }
+    
+    let html = '<div style="background:white; padding:20px; border-radius:8px; margin-top:20px;"><h3>📍 Rastreo de Mensajeros</h3>';
+    for (let e of mensajerosConUbicacion) {
+        html += `
+            <div style="border-bottom:1px solid #ddd; padding:10px;">
+                <strong>📦 Envío #${e.id}</strong> - ${e.destinatario}<br>
+                <strong>👤 Mensajero:</strong> ${e.mensajero}<br>
+                <strong>📍 Última ubicación:</strong> ${e.ubicacion.lat}, ${e.ubicacion.lng}<br>
+                <strong>🕐 Hora:</strong> ${new Date(e.ubicacion.timestamp).toLocaleString()}<br>
+                <strong>📱 Dispositivo:</strong> ${e.ubicacion.dispositivo || 'Desconocido'}<br>
+                <a href="https://www.google.com/maps?q=${e.ubicacion.lat},${e.ubicacion.lng}" target="_blank" style="color:#27ae60;">Ver en mapa →</a>
+            </div>
+        `;
+    }
+    html += '</div>';
+    
+    // Mostrar en un modal o en la página
+    const modal = document.createElement('div');
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
+    modal.style.backgroundColor = 'rgba(0,0,0,0.7)';
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    modal.style.zIndex = '9999';
+    modal.innerHTML = `
+        <div style="background:white; border-radius:16px; padding:20px; max-width:500px; max-height:80%; overflow:auto;">
+            <h2>📍 Rastreo en Vivo</h2>
+            ${html}
+            <button id="btn-cerrar-rastreo" style="margin-top:20px; padding:10px 20px; background:#e74c3c; color:white; border:none; border-radius:8px;">Cerrar</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    document.getElementById('btn-cerrar-rastreo')?.addEventListener('click', () => modal.remove());
+}
+
+// Agregar botón de rastreo al dashboard
+function agregarBotonRastreo() {
+    const header = document.querySelector('#main-panel > div:first-child');
+    if (header && !document.getElementById('btn-rastrear')) {
+        const btnRastreo = document.createElement('button');
+        btnRastreo.id = 'btn-rastrear';
+        btnRastreo.textContent = '📍 Rastrear Mensajeros';
+        btnRastreo.style.backgroundColor = '#3498db';
+        btnRastreo.style.color = 'white';
+        btnRastreo.style.padding = '8px 16px';
+        btnRastreo.style.border = 'none';
+        btnRastreo.style.borderRadius = '5px';
+        btnRastreo.style.cursor = 'pointer';
+        btnRastreo.addEventListener('click', mostrarRastreo);
+        
+        const div = header.querySelector('div');
+        if (div) div.appendChild(btnRastreo);
+    }
+}
+
+// Llamar a agregarBotonRastreo después de cargar datos
+setTimeout(agregarBotonRastreo, 1000);
 
 // ─── Eventos e Inicialización ───────────────────────────────────────────────
 document.getElementById('btn-login')?.addEventListener('click', iniciarSesion);
