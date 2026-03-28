@@ -11,7 +11,7 @@ function cargarMensajeros() {
         mensajerosRegistrados = JSON.parse(datosGuardados);
         console.log('👤 Mensajeros cargados:', mensajerosRegistrados.length);
     } else {
-        // Datos por defecto si no hay ninguno
+        // Datos por defecto
         mensajerosRegistrados = [
             { codigo: "MEN001", nombre: "Pedro Martínez", telefono: "3109876543" },
             { codigo: "MEN002", nombre: "Luis Torres", telefono: "3155558888" },
@@ -19,6 +19,8 @@ function cargarMensajeros() {
         ];
         guardarMensajeros();
     }
+    // Mostrar en consola los códigos disponibles para depuración
+    console.log('Códigos disponibles:', mensajerosRegistrados.map(m => m.codigo).join(', '));
 }
 
 function guardarMensajeros() {
@@ -169,7 +171,7 @@ function actualizarEstado(id, nuevoEstado) {
 
 // Función de login
 function iniciarSesion() {
-    const codigo = sanitizar(document.getElementById('codigo-mensajero').value.trim().toUpperCase());
+    const codigo = document.getElementById('codigo-mensajero').value.trim().toUpperCase();
     
     if (!codigo) {
         alert('Por favor ingresa tu código de mensajero');
@@ -179,10 +181,13 @@ function iniciarSesion() {
     // Recargar mensajeros para asegurar que están actualizados
     cargarMensajeros();
     
+    console.log('Buscando código:', codigo);
+    console.log('Mensajeros disponibles:', mensajerosRegistrados);
+    
     const mensajero = mensajerosRegistrados.find(m => m.codigo === codigo);
     
     if (!mensajero) {
-        alert('❌ Código incorrecto. Intenta nuevamente.');
+        alert('❌ Código incorrecto. Los códigos disponibles son: ' + mensajerosRegistrados.map(m => m.codigo).join(', '));
         return;
     }
     
