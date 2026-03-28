@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>EnvíaTrack - Administración</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
     <link rel="stylesheet" href="style.css">
     <style>
         .admin-header {
@@ -81,9 +82,6 @@
             padding: 8px;
             margin-right: 10px;
         }
-        .mensajero-activo {
-            background-color: #e8f5e9;
-        }
         h2 {
             margin-bottom: 15px;
             color: #333;
@@ -92,44 +90,62 @@
 </head>
 <body>
     <div id="toast-container" class="toast-container"></div>
-    
-    <div class="admin-header">
-        <h1>👑 EnvíaTrack - Administración</h1>
-        <a href="index.html" class="btn-volver">← Volver al Panel de Envíos</a>
+
+    <!-- Pantalla de Login -->
+    <div id="login-panel" style="max-width: 400px; margin: 50px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+        <h2 style="text-align: center;">🔐 EnvíaTrack - Admin</h2>
+        <p style="text-align: center; color: #666; margin-bottom: 20px;">Inicia sesión para acceder</p>
+        <input type="email" id="login-email" placeholder="Correo electrónico" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px;">
+        <input type="password" id="login-password" placeholder="Contraseña" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px;">
+        <button id="btn-login" style="width: 100%; padding: 12px; background-color: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer;">Iniciar Sesión</button>
+        <p style="text-align: center; margin-top: 20px;">
+            <a href="index.html" style="color: #3498db;">← Volver al panel principal</a>
+        </p>
     </div>
 
-    <!-- Gestión de Mensajeros -->
-    <div class="form-mensajero">
-        <h2>👤 Gestión de Mensajeros</h2>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <input type="text" id="codigo-mensajero" placeholder="Código (ej: MEN004)" style="flex: 1;">
-            <input type="text" id="nombre-mensajero" placeholder="Nombre completo" style="flex: 2;">
-            <input type="text" id="telefono-mensajero" placeholder="Teléfono" style="flex: 1;">
-            <button id="btn-agregar-mensajero" class="btn-agregar">➕ Agregar Mensajero</button>
+    <!-- Panel Principal de Admin (oculto hasta login) -->
+    <div id="main-panel" style="display: none;">
+        <div class="admin-header">
+            <h1>👑 EnvíaTrack - Administración</h1>
+            <div style="display: flex; gap: 10px;">
+                <button id="btn-dark-mode" style="background-color: #34495e; color: white; padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer;">🌙 Modo Oscuro</button>
+                <button id="btn-logout" style="background-color: #e74c3c; color: white; padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer;">🚪 Cerrar Sesión</button>
+                <a href="index.html" class="btn-volver">← Volver al Panel de Envíos</a>
+            </div>
+        </div>
+
+        <!-- Gestión de Mensajeros -->
+        <div class="form-mensajero">
+            <h2>👤 Gestión de Mensajeros</h2>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <input type="text" id="codigo-mensajero" placeholder="Código (ej: MEN004)" style="flex: 1;">
+                <input type="text" id="nombre-mensajero" placeholder="Nombre completo" style="flex: 2;">
+                <input type="text" id="telefono-mensajero" placeholder="Teléfono" style="flex: 1;">
+                <button id="btn-agregar-mensajero" class="btn-agregar">➕ Agregar Mensajero</button>
+            </div>
+        </div>
+
+        <!-- Lista de Mensajeros -->
+        <div class="tabla-mensajeros">
+            <h2>📋 Lista de Mensajeros</h2>
+            <div id="tabla-mensajeros"></div>
+        </div>
+
+        <!-- Asignar Mensajero a Envío -->
+        <div class="asignacion">
+            <h2>📦 Asignar Mensajero a Envío</h2>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                <select id="select-envio" style="flex: 2; padding: 8px;">
+                    <option value="">Seleccionar envío...</option>
+                </select>
+                <select id="select-mensajero" style="flex: 2; padding: 8px;">
+                    <option value="">Seleccionar mensajero...</option>
+                </select>
+                <button id="btn-asignar" class="btn-agregar">📌 Asignar</button>
+            </div>
         </div>
     </div>
 
-    <!-- Lista de Mensajeros -->
-    <div class="tabla-mensajeros">
-        <h2>📋 Lista de Mensajeros</h2>
-        <div id="tabla-mensajeros"></div>
-    </div>
-
-    <!-- Asignar Mensajero a Envío -->
-    <div class="asignacion">
-        <h2>📦 Asignar Mensajero a Envío</h2>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-            <select id="select-envio" style="flex: 2; padding: 8px;">
-                <option value="">Seleccionar envío...</option>
-            </select>
-            <select id="select-mensajero" style="flex: 2; padding: 8px;">
-                <option value="">Seleccionar mensajero...</option>
-            </select>
-            <button id="btn-asignar" class="btn-agregar">📌 Asignar</button>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="admin.js"></script>
 </body>
 </html>

@@ -378,8 +378,14 @@ function verificarSesion() {
     }
 }
 
+// Usuarios autorizados (puedes agregar más)
+const USUARIOS_AUTORIZADOS = [
+    { email: "admin@enviatrack.com", password: "Admin123" },
+    { email: "comercio@enviatrack.com", password: "Comercio2024" }
+];
+
 function iniciarSesion() {
-    const email    = document.getElementById('login-email').value.trim();
+    const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
 
     if (!email || !password) {
@@ -387,12 +393,16 @@ function iniciarSesion() {
         return;
     }
 
-    // Validación simple (ajusta según tu backend o lógica real)
-    if (email && password.length >= 4) {
+    // Verificar credenciales
+    const usuarioValido = USUARIOS_AUTORIZADOS.find(u => u.email === email && u.password === password);
+
+    if (usuarioValido) {
         localStorage.setItem('enviaTrack_sesion', 'activa');
+        localStorage.setItem('enviaTrack_usuario', email);
         document.getElementById('login-panel').style.display = 'none';
-        document.getElementById('main-panel').style.display  = 'block';
+        document.getElementById('main-panel').style.display = 'block';
         mostrarMensaje(`Bienvenido, ${email}`, 'success', 'Sesión iniciada');
+        mostrarTabla();
     } else {
         mostrarMensaje('Credenciales incorrectas', 'error', 'Error de acceso');
     }

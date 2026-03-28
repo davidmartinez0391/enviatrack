@@ -1,15 +1,21 @@
-// Datos de mensajeros
+// Variables globales
 let mensajeros = [];
 let envios = [];
 
-// Función para mostrar notificaciones
-function mostrarNotificacion(mensaje, tipo = 'success', titulo = '') {
+// Usuarios autorizados (mismo que en app.js)
+const USUARIOS_AUTORIZADOS = [
+    { email: "admin@enviatrack.com", password: "Admin123" },
+    { email: "comercio@enviatrack.com", password: "Comercio2024" }
+];
+
+// ─── Notificaciones ───────────────────────────────────────────────────────────
+function mostrarMensaje(mensaje, tipo = 'success', titulo = '') {
     const container = document.getElementById('toast-container');
     if (!container) return;
-    
+
     const iconos = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
     const titulos = { success: 'Éxito', error: 'Error', info: 'Información', warning: 'Advertencia' };
-    
+
     const toast = document.createElement('div');
     toast.className = `toast toast-${tipo}`;
     toast.innerHTML = `
@@ -20,7 +26,7 @@ function mostrarNotificacion(mensaje, tipo = 'success', titulo = '') {
         </div>
         <button class="toast-close" onclick="this.parentElement.remove()">×</button>
     `;
-    
+
     container.appendChild(toast);
     setTimeout(() => {
         if (toast.parentElement) {
@@ -30,10 +36,54 @@ function mostrarNotificacion(mensaje, tipo = 'success', titulo = '') {
     }, 3000);
 }
 
-// Cargar datos
+// ─── Login / Logout ───────────────────────────────────────────────────────────
+function iniciarSesion() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+
+    if (!email || !password) {
+        mostrarMensaje('Ingresa tu correo y contraseña', 'warning', 'Campos vacíos');
+        return;
+    }
+
+    const usuarioValido = USUARIOS_AUTORIZADOS.find(u => u.email === email && u.password === password);
+
+    if (usuarioValido) {
+        localStorage.setItem('enviaTrack_sesion', 'activa');
+        localStorage.setItem('enviaTrack_usuario', email);
+        document.getElementById('login-panel').style.display = 'none';
+        document.getElementById('main-panel').style.display = 'block';
+        mostrarMensaje(`Bienvenido, ${email}`, 'success', 'Sesión iniciada');
+        cargarDatos();
+        mostrarMensajeros();
+        actualizarSelects();
+    } else {
+        mostrarMensaje('Credenciales incorrectas', 'error', 'Error de acceso');
+    }
+}
+
+function cerrarSesion() {
+    localStorage.removeItem('enviaTrack_sesion');
+    document.getElementById('main-panel').style.display = 'none';
+    document.getElementById('login-panel').style.display = 'block';
+    mostrarMensaje('Sesión cerrada', 'info', 'Hasta luego');
+}
+
+function verificarSesion() {
+    const sesion = localStorage.getItem('enviaTrack_sesion');
+    if (sesion === 'activa') {
+        document.getElementById('login-panel').style.display = 'none';
+        document.getElementById('main-panel').style.display = 'block';
+        cargarDatos();
+        mostrarMensajeros();
+        actualizarSelects();
+    }
+}
+
+// ─── Cargar datos ─────────────────────────────────────────────────────────────
 function cargarDatos() {
     // Cargar mensajeros
-    let mensajerosGuardados = localStorage.getItem('enviaTrack_mensajeros');
+    const mensajerosGuardados = localStorage.getItem('enviaTrack_mensajeros');
     if (mensajerosGuardados) {
         mensajeros = JSON.parse(mensajerosGuardados);
     } else {
@@ -46,7 +96,7 @@ function cargarDatos() {
     }
     
     // Cargar envíos
-    let enviosGuardados = localStorage.getItem('enviaTrack_envios');
+    const enviosGuardados = localStorage.getItem('enviaTrack_envios');
     if (enviosGuardados) {
         envios = JSON.parse(enviosGuardados);
     }
@@ -60,7 +110,7 @@ function guardarEnvios() {
     localStorage.setItem('enviaTrack_envios', JSON.stringify(envios));
 }
 
-// Mostrar tabla de mensajeros
+// ─── Mostrar mensajeros ───────────────────────────────────────────────────────
 function mostrarMensajeros() {
     const contenedor = document.getElementById('tabla-mensajeros');
     if (!contenedor) return;
@@ -82,10 +132,8 @@ function mostrarMensajeros() {
         </thead>
         <tbody>`;
     
-    for (let i = 0; i < mensajeros.length; i++) {
-        const m = mensajeros[i];
+    for (let m of mensajeros) {
         const enviosAsignados = envios.filter(e => e.mensajero === m.nombre).length;
-        
         html += `<tr style="border-bottom:1px solid #ddd;">
             <td style="padding:8px;">${m.codigo}</td>
             <td style="padding:8px;">${m.nombre}</td>
@@ -102,47 +150,41 @@ function mostrarMensajeros() {
     contenedor.innerHTML = html;
 }
 
-// Actualizar select de envíos
-function actualizarSelectEnvios() {
-    const select = document.getElementById('select-envio');
-    if (!select) return;
+// ─── Actualizar selects ───────────────────────────────────────────────────────
+function actualizarSelects() {
+    const selectEnvio = document.getElementById('select-envio');
+    const selectMensajero = document.getElementById('select-mensajero');
     
-    select.innerHTML = '<option value="">Seleccionar envío...</option>';
+    if (selectEnvio) {
+        selectEnvio.innerHTML = '<option value="">Seleccionar envío...</option>';
+        const enviosDisponibles = envios.filter(e => e.estado !== 'entregado');
+        for (let e of enviosDisponibles) {
+            const asignado = e.mensajero ? ` (Asignado: ${e.mensajero})` : ' (Sin asignar)';
+            selectEnvio.innerHTML += `<option value="${e.id}">#${e.id} - ${e.destinatario}${asignado}</option>`;
+        }
+    }
     
-    // Mostrar solo envíos pendientes o en ruta
-    const enviosDisponibles = envios.filter(e => e.estado !== 'entregado');
-    
-    for (let e of enviosDisponibles) {
-        const asignado = e.mensajero ? ` (Asignado: ${e.mensajero})` : ' (Sin asignar)';
-        select.innerHTML += `<option value="${e.id}">#${e.id} - ${e.destinatario}${asignado}</option>`;
+    if (selectMensajero) {
+        selectMensajero.innerHTML = '<option value="">Seleccionar mensajero...</option>';
+        for (let m of mensajeros) {
+            selectMensajero.innerHTML += `<option value="${m.nombre}">${m.codigo} - ${m.nombre}</option>`;
+        }
     }
 }
 
-// Actualizar select de mensajeros
-function actualizarSelectMensajeros() {
-    const select = document.getElementById('select-mensajero');
-    if (!select) return;
-    
-    select.innerHTML = '<option value="">Seleccionar mensajero...</option>';
-    
-    for (let m of mensajeros) {
-        select.innerHTML += `<option value="${m.nombre}">${m.codigo} - ${m.nombre}</option>`;
-    }
-}
-
-// Agregar mensajero
+// ─── CRUD Mensajeros ──────────────────────────────────────────────────────────
 function agregarMensajero() {
     const codigo = document.getElementById('codigo-mensajero').value.trim().toUpperCase();
     const nombre = document.getElementById('nombre-mensajero').value.trim();
     const telefono = document.getElementById('telefono-mensajero').value.trim();
     
     if (!codigo || !nombre || !telefono) {
-        mostrarNotificacion('Completa todos los campos', 'warning', 'Campos incompletos');
+        mostrarMensaje('Completa todos los campos', 'warning', 'Campos incompletos');
         return;
     }
     
     if (mensajeros.some(m => m.codigo === codigo)) {
-        mostrarNotificacion('Ya existe un mensajero con este código', 'error', 'Error');
+        mostrarMensaje('Ya existe un mensajero con este código', 'error', 'Error');
         return;
     }
     
@@ -154,11 +196,10 @@ function agregarMensajero() {
     document.getElementById('telefono-mensajero').value = '';
     
     mostrarMensajeros();
-    actualizarSelectMensajeros();
-    mostrarNotificacion(`Mensajero ${nombre} agregado`, 'success', 'Mensajero creado');
+    actualizarSelects();
+    mostrarMensaje(`Mensajero ${nombre} agregado`, 'success', 'Mensajero creado');
 }
 
-// Editar mensajero
 function editarMensajero(codigo) {
     const mensajero = mensajeros.find(m => m.codigo === codigo);
     if (!mensajero) return;
@@ -179,13 +220,12 @@ function editarMensajero(codigo) {
             guardarMensajeros();
             guardarEnvios();
             mostrarMensajeros();
-            actualizarSelectEnvios();
-            mostrarNotificacion(`Mensajero ${codigo} actualizado`, 'success', 'Actualizado');
+            actualizarSelects();
+            mostrarMensaje(`Mensajero ${codigo} actualizado`, 'success', 'Actualizado');
         }
     }
 }
 
-// Eliminar mensajero
 function eliminarMensajero(codigo) {
     const mensajero = mensajeros.find(m => m.codigo === codigo);
     if (!mensajero) return;
@@ -211,19 +251,17 @@ function eliminarMensajero(codigo) {
         guardarMensajeros();
         guardarEnvios();
         mostrarMensajeros();
-        actualizarSelectEnvios();
-        actualizarSelectMensajeros();
-        mostrarNotificacion(`Mensajero ${mensajero.nombre} eliminado`, 'warning', 'Eliminado');
+        actualizarSelects();
+        mostrarMensaje(`Mensajero ${mensajero.nombre} eliminado`, 'warning', 'Eliminado');
     }
 }
 
-// Asignar mensajero a envío
 function asignarMensajero() {
     const envioId = document.getElementById('select-envio').value;
     const mensajeroNombre = document.getElementById('select-mensajero').value;
     
     if (!envioId || !mensajeroNombre) {
-        mostrarNotificacion('Selecciona un envío y un mensajero', 'warning', 'Selección requerida');
+        mostrarMensaje('Selecciona un envío y un mensajero', 'warning', 'Selección requerida');
         return;
     }
     
@@ -236,23 +274,39 @@ function asignarMensajero() {
     envio.mensajero = mensajero.nombre;
     guardarEnvios();
     
-    actualizarSelectEnvios();
-    mostrarNotificacion(`Envío #${envio.id} asignado a ${mensajero.nombre}`, 'success', 'Asignación completada');
-    
-    // Actualizar tabla de mensajeros
+    actualizarSelects();
     mostrarMensajeros();
+    mostrarMensaje(`Envío #${envio.id} asignado a ${mensajero.nombre}`, 'success', 'Asignación completada');
 }
 
-// Inicializar
-function init() {
-    cargarDatos();
-    mostrarMensajeros();
-    actualizarSelectEnvios();
-    actualizarSelectMensajeros();
+// ─── Modo Oscuro ──────────────────────────────────────────────────────────────
+function initDarkMode() {
+    if (localStorage.getItem('enviaTrack_darkMode') === 'true') {
+        document.body.classList.add('dark-mode');
+        const btn = document.getElementById('btn-dark-mode');
+        if (btn) btn.innerHTML = '☀️ Modo Claro';
+    }
 }
 
-// Eventos
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('enviaTrack_darkMode', isDark);
+    const btn = document.getElementById('btn-dark-mode');
+    if (btn) btn.innerHTML = isDark ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
+}
+
+// ─── Eventos e Inicialización ─────────────────────────────────────────────────
+document.getElementById('btn-login')?.addEventListener('click', iniciarSesion);
+document.getElementById('btn-logout')?.addEventListener('click', cerrarSesion);
 document.getElementById('btn-agregar-mensajero')?.addEventListener('click', agregarMensajero);
 document.getElementById('btn-asignar')?.addEventListener('click', asignarMensajero);
+document.getElementById('btn-dark-mode')?.addEventListener('click', toggleDarkMode);
 
-init();
+// Permitir login con Enter
+document.getElementById('login-password')?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') iniciarSesion();
+});
+
+initDarkMode();
+verificarSesion();
