@@ -131,6 +131,8 @@ function mostrarMensajeros() {
             </tr>
         </thead>
         <tbody>`;
+        actualizarGraficoMensajeros();
+    
     
     for (let m of mensajeros) {
         const enviosAsignados = envios.filter(e => e.mensajero === m.nombre).length;
@@ -196,6 +198,7 @@ function agregarMensajero() {
     document.getElementById('telefono-mensajero').value = '';
     
     mostrarMensajeros();
+    actualizarGraficoMensajeros();
     actualizarSelects();
     mostrarMensaje(`Mensajero ${nombre} agregado`, 'success', 'Mensajero creado');
 }
@@ -251,6 +254,7 @@ function eliminarMensajero(codigo) {
         guardarMensajeros();
         guardarEnvios();
         mostrarMensajeros();
+        actualizarGraficoMensajeros();
         actualizarSelects();
         mostrarMensaje(`Mensajero ${mensajero.nombre} eliminado`, 'warning', 'Eliminado');
     }
@@ -276,6 +280,7 @@ function asignarMensajero() {
     
     actualizarSelects();
     mostrarMensajeros();
+    actualizarGraficoMensajeros();
     mostrarMensaje(`Envío #${envio.id} asignado a ${mensajero.nombre}`, 'success', 'Asignación completada');
 }
 
@@ -295,7 +300,88 @@ function toggleDarkMode() {
     const btn = document.getElementById('btn-dark-mode');
     if (btn) btn.innerHTML = isDark ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
 }
+// ─── Gráfico de rendimiento por mensajero ─────────────────────────────────────
+let graficoMensajeros = null;
 
+function actualizarGraficoMensajeros() {
+    if (typeof Chart === 'undefined') return;
+    
+    // Actualizar envios desde localStorage
+    const enviosGuardados = localStorage.getItem('enviaTrack_envios');
+    if (enviosGuardados) {
+        envios = JSON.parse(enviosGuardados);
+    }
+    
+    // Calcular entregas por mensajero
+    const datosMensajeros = mensajeros.map(m => {
+        const totalEntregas = envios.filter(e => e.mensajero === m.nombre && e.estado === 'entregado').length;
+        const totalAsignados = envios.filter(e => e.mensajero === m.nombre).length;
+        return {
+            nombre: m.nombre.split(' ')[0],
+            completado: totalEntregas,
+            pendiente: totalAsignados - totalEntregas,
+            total: totalAsignados
+        };
+    }).filter(d => d.total > 0);
+    
+    if (datosMensajeros.length === 0) {
+        const ctx = document.getElementById('graficoMensajeros');
+        if (ctx && ctx.parentElement) {
+            ctx.parentElement.innerHTML = '<p style="text-align:center; padding:40px;">No hay datos de entregas para mostrar</p><canvas id="graficoMensajeros" style="max-height: 300px; display:none;"></canvas>';
+        }
+        return;
+    }
+    
+    const ctx = document.getElementById('graficoMensajeros');
+    if (!ctx) return;
+    
+    if (graficoMensajeros) graficoMensajeros.destroy();
+    
+    graficoMensajeros = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: datosMensajeros.map(d => d.nombre),
+            datasets: [
+                {
+                    label: '✅ Entregados',
+                    data: datosMensajeros.map(d => d.completado),
+                    backgroundColor: '#27ae60',
+                    borderRadius: 5
+                },
+                {
+                    label: '⏳ Pendientes / En Ruta',
+                    data: datosMensajeros.map(d => d.pendiente),
+                    backgroundColor: '#f39c12',
+                    borderRadius: 5
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: {
+                    callbacks: {
+                        afterBody: function(context) {
+                            const index = context[0].dataIndex;
+                            const total = datosMensajeros[index].total;
+                            return `Total asignados: ${total}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { title: { display: true, text: 'Mensajero' } },
+                y: { 
+                    beginAtZero: true, 
+                    title: { display: true, text: 'Número de envíos' },
+                    ticks: { stepSize: 1 }
+                }
+            }
+        }
+    });
+}
 // ─── Eventos e Inicialización ─────────────────────────────────────────────────
 document.getElementById('btn-login')?.addEventListener('click', iniciarSesion);
 document.getElementById('btn-logout')?.addEventListener('click', cerrarSesion);
