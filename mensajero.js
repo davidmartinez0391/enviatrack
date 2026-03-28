@@ -44,21 +44,26 @@ async function cargarMensajeros() {
 }
 async function sincronizarEnvios() {
     try {
+        console.log('🔄 Sincronizando envíos desde web...');
         const response = await fetch('https://davidmartinez0391.github.io/enviatrack/data.json');
         const data = await response.json();
         
+        console.log('📦 Datos recibidos:', data);
+        
         if (data.envios && data.envios.length > 0) {
             localStorage.setItem('enviaTrack_envios', JSON.stringify(data.envios));
-            console.log('📦 Envíos sincronizados:', data.envios.length);
+            console.log('✅ Envíos sincronizados:', data.envios.length);
+            console.log('📋 Lista de envíos:', data.envios);
             return true;
+        } else {
+            console.log('⚠️ No hay envíos en data.json');
+            return false;
         }
-        return false;
     } catch (error) {
-        console.error('Error al sincronizar envíos:', error);
+        console.error('❌ Error al sincronizar envíos:', error);
         return false;
     }
 }
-
 function guardarMensajeros() {
     localStorage.setItem('enviaTrack_mensajeros', JSON.stringify(mensajerosRegistrados));
 }
@@ -159,13 +164,13 @@ function filtrarEnviosMensajero() {
     const textoBusqueda = document.getElementById('buscador-mensajero').value.toLowerCase();
     let todosEnvios = cargarEnvios();
     
-    // Mostrar en consola para depuración
-    console.log('Todos los envíos:', todosEnvios);
-    console.log('Mensajero actual:', mensajeroActual);
+    console.log('🔍 Todos los envíos en localStorage:', todosEnvios);
+    console.log('👤 Mensajero actual:', mensajeroActual);
+    console.log('📌 Buscando envíos con mensajero =', mensajeroActual?.nombre);
     
     let enviosFiltrados = todosEnvios.filter(envio => envio.mensajero === mensajeroActual.nombre);
     
-    console.log('Envíos del mensajero:', enviosFiltrados);
+    console.log('✅ Envíos del mensajero:', enviosFiltrados);
     
     if (textoBusqueda !== '') {
         enviosFiltrados = enviosFiltrados.filter(envio => {
@@ -176,7 +181,6 @@ function filtrarEnviosMensajero() {
     
     mostrarEnviosMensajero(enviosFiltrados);
 }
-
 // Función para actualizar estado del envío
 function actualizarEstado(id, nuevoEstado) {
     let envios = cargarEnvios();
