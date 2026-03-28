@@ -1,5 +1,4 @@
-// Versión con localStorage - Funciona sin internet
-let envios = [];
+let listaEnvios = [];
 let proximoId = 1;
 
 function normalizarTexto(texto) {
@@ -45,10 +44,10 @@ function cargarDatos() {
     let idGuardado = localStorage.getItem('enviaTrack_proximoId');
     
     if (datos) {
-        envios = JSON.parse(datos);
-        console.log('✅ Cargados ' + envios.length + ' envíos');
+        listaEnvios = JSON.parse(datos);
+        console.log('✅ Cargados ' + listaEnvios.length + ' envíos');
     } else {
-        envios = [
+        listaEnvios = [
             { id: 1, destinatario: "María González", direccion: "Calle 45 # 20-30, Bogotá", telefono: "3001234567", estado: "pendiente", mensajero: "Luis Torres", fechaCreacion: "2025-03-22 10:30" },
             { id: 2, destinatario: "Carlos Rodríguez", direccion: "Carrera 15 # 88-12, Medellín", telefono: "3109876543", estado: "entregado", mensajero: "Pedro Martínez", fechaCreacion: "2025-03-22 09:15", fechaEntrega: "2026-03-27 20:43:50" },
             { id: 3, destinatario: "Ana Lucía Fernández", direccion: "Avenida 19 # 123-45, Cali", telefono: "3155558888", estado: "entregado", mensajero: "Luis Torres", fechaCreacion: "2025-03-21 16:20", fechaEntrega: "2025-03-21 17:45" },
@@ -60,14 +59,14 @@ function cargarDatos() {
     
     if (idGuardado) {
         proximoId = parseInt(idGuardado);
-    } else if (envios.length > 0) {
-        let ids = envios.map(e => e.id);
+    } else if (listaEnvios.length > 0) {
+        let ids = listaEnvios.map(e => e.id);
         proximoId = Math.max(...ids, 0) + 1;
     }
 }
 
 function guardarDatos() {
-    localStorage.setItem('enviaTrack_envios', JSON.stringify(envios));
+    localStorage.setItem('enviaTrack_envios', JSON.stringify(listaEnvios));
     localStorage.setItem('enviaTrack_proximoId', proximoId);
 }
 
@@ -76,17 +75,21 @@ function mostrarTabla() {
     if (!contenedor) return;
     
     let texto = normalizarTexto(document.getElementById('buscador')?.value || '');
-    let filtrados = envios;
+    let filtrados = listaEnvios;
     
     if (texto !== '') {
-        filtrados = envios.filter(e => {
+        filtrados = listaEnvios.filter(e => {
             let destinatarioNorm = normalizarTexto(e.destinatario);
             let direccionNorm = normalizarTexto(e.direccion);
             return destinatarioNorm.includes(texto) || direccionNorm.includes(texto);
         });
     }
     
-    let html = `<table style="width:100%; border-collapse:collapse;"><thead style="background:#333; color:white;">$\n        <th style="padding:10px;">ID</th><th style="padding:10px;">Destinatario</th><th style="padding:10px;">Dirección</th>\n        <th style="padding:10px;">Teléfono</th><th style="padding:10px;">Estado</th><th style="padding:10px;">Mensajero</th>\n        <th style="padding:10px;">Fecha Creación</th><th style="padding:10px;">Fecha Entrega</th><th style="padding:10px;">Acciones</th>\n     </thead><tbody>`;
+    let html = `<table style="width:100%; border-collapse:collapse;"><thead style="background:#333; color:white;"><tr>
+        <th style="padding:10px;">ID</th><th style="padding:10px;">Destinatario</th><th style="padding:10px;">Dirección</th>
+        <th style="padding:10px;">Teléfono</th><th style="padding:10px;">Estado</th><th style="padding:10px;">Mensajero</th>
+        <th style="padding:10px;">Fecha Creación</th><th style="padding:10px;">Fecha Entrega</th><th style="padding:10px;">Acciones</th>
+    </tr></thead><tbody>`;
     
     for (let e of filtrados) {
         let estadoText = { 'pendiente': '⏳ Pendiente', 'en_ruta': '🚚 En ruta', 'entregado': '✅ Entregado' };
@@ -109,27 +112,37 @@ function mostrarTabla() {
             botones += `<button onclick="eliminarEnvio(${e.id})" style="background:#e74c3c; color:white; padding:5px 10px; margin-left:5px; border:none; border-radius:3px;">🗑️ Eliminar</button>`;
         }
         
-        html += `<tr style="border-bottom:1px solid #ddd;">\n            <td style="padding:8px; text-align:center;">${e.id}</td>\n            <td style="padding:8px;">${e.destinatario}</td>\n            <td style="padding:8px;">${e.direccion}</td>\n            <td style="padding:8px;">${e.telefono}</td>\n            <td style="padding:8px;" class="${estadoClass[e.estado]}">${estadoText[e.estado]}</td>\n            <td style="padding:8px;">${e.mensajero || 'Sin asignar'}</td>\n            <td style="padding:8px;">${e.fechaCreacion}</td>\n            <td style="padding:8px;">${e.fechaEntrega || '—'}</td>\n            <td style="padding:8px; text-align:center;">${botones}</td>\n           </tr>`;
+        html += `<tr style="border-bottom:1px solid #ddd;">
+            <td style="padding:8px; text-align:center;">${e.id}</td>
+            <td style="padding:8px;">${e.destinatario}</td>
+            <td style="padding:8px;">${e.direccion}</td>
+            <td style="padding:8px;">${e.telefono}</td>
+            <td style="padding:8px;" class="${estadoClass[e.estado]}">${estadoText[e.estado]}</td>
+            <td style="padding:8px;">${e.mensajero || 'Sin asignar'}</td>
+            <td style="padding:8px;">${e.fechaCreacion}</td>
+            <td style="padding:8px;">${e.fechaEntrega || '—'}</td>
+            <td style="padding:8px; text-align:center;">${botones}</td>
+        </tr>`;
     }
     
     html += `</tbody></table>`;
     
-    if (filtrados.length === 0 && envios.length === 0) {
+    if (filtrados.length === 0 && listaEnvios.length === 0) {
         html = '<p style="text-align:center; padding:20px;">No hay envíos registrados</p>';
-    } else if (filtrados.length === 0 && envios.length > 0) {
+    } else if (filtrados.length === 0 && listaEnvios.length > 0) {
         html = '<p style="text-align:center; padding:20px;">No hay envíos que coincidan</p>';
     }
     
     contenedor.innerHTML = html;
     
-    let pend = envios.filter(e => e.estado === 'pendiente').length;
-    let ruta = envios.filter(e => e.estado === 'en_ruta').length;
-    let entre = envios.filter(e => e.estado === 'entregado').length;
+    let pend = listaEnvios.filter(e => e.estado === 'pendiente').length;
+    let ruta = listaEnvios.filter(e => e.estado === 'en_ruta').length;
+    let entre = listaEnvios.filter(e => e.estado === 'entregado').length;
     
     document.getElementById('contador-pendiente').textContent = pend;
     document.getElementById('contador-en-ruta').textContent = ruta;
     document.getElementById('contador-entregado').textContent = entre;
-    document.getElementById('contador-total').textContent = envios.length;
+    document.getElementById('contador-total').textContent = listaEnvios.length;
     
     actualizarGraficos();
 }
@@ -140,9 +153,9 @@ let graficoEntregas = null;
 function actualizarGraficos() {
     if (typeof Chart === 'undefined') return;
     
-    const pendientes = envios.filter(e => e.estado === 'pendiente').length;
-    const enRuta = envios.filter(e => e.estado === 'en_ruta').length;
-    const entregados = envios.filter(e => e.estado === 'entregado').length;
+    const pendientes = listaEnvios.filter(e => e.estado === 'pendiente').length;
+    const enRuta = listaEnvios.filter(e => e.estado === 'en_ruta').length;
+    const entregados = listaEnvios.filter(e => e.estado === 'entregado').length;
     
     const ctxEstados = document.getElementById('graficoEstados');
     if (ctxEstados) {
@@ -166,7 +179,7 @@ function actualizarGraficos() {
         const fechaStr = fecha.toLocaleDateString();
         ultimos7Dias.push(fechaStr);
         
-        const entregasDia = envios.filter(e => {
+        const entregasDia = listaEnvios.filter(e => {
             if (!e.fechaEntrega) return false;
             return new Date(e.fechaEntrega).toLocaleDateString() === fechaStr;
         }).length;
@@ -188,7 +201,7 @@ function actualizarGraficos() {
 }
 
 function iniciarRuta(id) {
-    let e = envios.find(x => x.id === id);
+    let e = listaEnvios.find(x => x.id === id);
     if (e) {
         e.estado = 'en_ruta';
         if (!e.mensajero) e.mensajero = 'Mensajero Asignado';
@@ -199,7 +212,7 @@ function iniciarRuta(id) {
 }
 
 function marcarEntregado(id) {
-    let e = envios.find(x => x.id === id);
+    let e = listaEnvios.find(x => x.id === id);
     if (e) {
         e.estado = 'entregado';
         e.fechaEntrega = new Date().toLocaleString();
@@ -210,10 +223,10 @@ function marcarEntregado(id) {
 }
 
 function eliminarEnvio(id) {
-    let e = envios.find(x => x.id === id);
+    let e = listaEnvios.find(x => x.id === id);
     if (e && confirm(`¿Eliminar envío #${id} de ${e.destinatario}?`)) {
-        let idx = envios.findIndex(x => x.id === id);
-        envios.splice(idx, 1);
+        let idx = listaEnvios.findIndex(x => x.id === id);
+        listaEnvios.splice(idx, 1);
         guardarDatos();
         mostrarTabla();
         mostrarNotificacion(`Envío #${id} eliminado`, 'warning', 'Eliminado');
@@ -221,7 +234,7 @@ function eliminarEnvio(id) {
 }
 
 function editarEnvio(id) {
-    const envio = envios.find(e => e.id === id);
+    const envio = listaEnvios.find(e => e.id === id);
     if (!envio) {
         mostrarNotificacion('Envío no encontrado', 'error', 'Error');
         return;
@@ -265,7 +278,7 @@ function agregarEnvio() {
         fechaCreacion: new Date().toLocaleString()
     };
     
-    envios.push(nuevo);
+    listaEnvios.push(nuevo);
     proximoId++;
     guardarDatos();
     mostrarTabla();
@@ -284,7 +297,7 @@ function filtrarEnvios() {
 
 function exportarCSV() {
     let contenido = 'ID,Destinatario,Dirección,Teléfono,Estado,Mensajero,Fecha Creación,Fecha Entrega\n';
-    for (let e of envios) {
+    for (let e of listaEnvios) {
         let estadoText = { 'pendiente': 'Pendiente', 'en_ruta': 'En Ruta', 'entregado': 'Entregado' };
         contenido += `${e.id},${e.destinatario},${e.direccion},${e.telefono},`;
         contenido += `${estadoText[e.estado]},${e.mensajero || 'Sin asignar'},${e.fechaCreacion},${e.fechaEntrega || ''}\n`;
@@ -295,10 +308,9 @@ function exportarCSV() {
     link.download = `envios_${new Date().toLocaleDateString()}.csv`;
     link.click();
     URL.revokeObjectURL(link.href);
-    mostrarNotificacion(`Exportados ${envios.length} envíos`, 'success', 'Exportación completa');
+    mostrarNotificacion(`Exportados ${listaEnvios.length} envíos`, 'success', 'Exportación completa');
 }
 
-// Modo Oscuro
 function initDarkMode() {
     const darkMode = localStorage.getItem('enviaTrack_darkMode') === 'true';
     if (darkMode) {
@@ -316,12 +328,10 @@ function toggleDarkMode() {
     if (btn) btn.innerHTML = isDark ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
 }
 
-// Inicializar
 cargarDatos();
 mostrarTabla();
 initDarkMode();
 
-// Eventos
 document.getElementById('form-nuevo-envio')?.addEventListener('submit', (e) => { e.preventDefault(); agregarEnvio(); });
 document.getElementById('buscador')?.addEventListener('input', filtrarEnvios);
 document.getElementById('btn-exportar')?.addEventListener('click', exportarCSV);
