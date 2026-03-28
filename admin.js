@@ -51,21 +51,23 @@ function iniciarSesion() {
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
     
-    // === AGREGAR ESTAS LÍNEAS DESPUÉS DE OBTENER email y password ===
-    // Límite de intentos fallidos
-    let intentos = localStorage.getItem('intentos_fallidos');
+    // Obtener intentos fallidos
+    let intentos = localStorage.getItem('enviaTrack_intentos');
     if (intentos === null) intentos = 0;
     else intentos = parseInt(intentos);
     
-    if (intentos >= 5) {
-        mostrarMensaje('Demasiados intentos. Espera 5 minutos.', 'error', 'Acceso bloqueado');
-        // Limpiar después de 5 minutos
-        setTimeout(() => {
-            localStorage.removeItem('intentos_fallidos');
-        }, 300000);
+    // Verificar si está bloqueado
+    const bloqueadoHasta = localStorage.getItem('enviaTrack_bloqueado');
+    if (bloqueadoHasta && Date.now() < parseInt(bloqueadoHasta)) {
+        const minutosRestantes = Math.ceil((parseInt(bloqueadoHasta) - Date.now()) / 60000);
+        mostrarMensaje(`Demasiados intentos. Espera ${minutosRestantes} minutos.`, 'error', 'Acceso bloqueado');
         return;
+    } else if (bloqueadoHasta) {
+        // Limpiar bloqueo si ya pasó el tiempo
+        localStorage.removeItem('enviaTrack_bloqueado');
+        localStorage.removeItem('enviaTrack_intentos');
+        intentos = 0;
     }
-    // ================================================================
     
     if (!email || !password) {
         mostrarMensaje('Ingresa tu correo y contraseña', 'warning', 'Campos vacíos');
@@ -75,9 +77,10 @@ function iniciarSesion() {
     const usuarioValido = USUARIOS_AUTORIZADOS.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
     
     if (usuarioValido) {
-        // === AGREGAR ESTA LÍNEA ===
-        localStorage.removeItem('intentos_fallidos');
-        // ==========================
+        // Limpiar intentos al iniciar sesión correctamente
+        localStorage.removeItem('enviaTrack_intentos');
+        localStorage.removeItem('enviaTrack_bloqueado');
+        
         localStorage.setItem('enviaTrack_sesion', 'activa');
         localStorage.setItem('enviaTrack_usuario', email);
         document.getElementById('login-panel').style.display = 'none';
@@ -92,12 +95,19 @@ function iniciarSesion() {
             if (typeof actualizarGraficoMensajeros === 'function') actualizarGraficoMensajeros();
         }
     } else {
-        // === AGREGAR ESTAS LÍNEAS ===
+        // Incrementar intentos fallidos
         intentos++;
-        localStorage.setItem('intentos_fallidos', intentos);
-        const restantes = 5 - intentos;
-        mostrarMensaje(`Credenciales incorrectas. Te quedan ${restantes} intentos.`, 'error', 'Error de acceso');
-        // ============================
+        localStorage.setItem('enviaTrack_intentos', intentos);
+        
+        if (intentos >= 5) {
+            // Bloquear por 5 minutos (300000 milisegundos)
+            const bloqueoHasta = Date.now() + 300000;
+            localStorage.setItem('enviaTrack_bloqueado', bloqueoHasta);
+            mostrarMensaje('Demasiados intentos. Acceso bloqueado por 5 minutos.', 'error', 'Acceso bloqueado');
+        } else {
+            const restantes = 5 - intentos;
+            mostrarMensaje(`Credenciales incorrectas. Te quedan ${restantes} intentos.`, 'error', 'Error de acceso');
+        }
     }
 }
 
