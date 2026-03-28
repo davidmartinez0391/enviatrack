@@ -1,14 +1,31 @@
-// Datos de mensajeros registrados (en una app real esto vendría de una base de datos)
-const mensajerosRegistrados = [
-    { codigo: "MEN001", nombre: "Pedro Martínez", telefono: "3109876543" },
-    { codigo: "MEN002", nombre: "Luis Torres", telefono: "3155558888" },
-    { codigo: "MEN003", nombre: "Ana Ramírez", telefono: "3001112233" }
-];
+// Datos de mensajeros (se cargan desde localStorage)
+let mensajerosRegistrados = [];
 
 // Variable para el mensajero actual
 let mensajeroActual = null;
 
-// Función para cargar datos desde localStorage
+// Función para cargar mensajeros desde localStorage
+function cargarMensajeros() {
+    const datosGuardados = localStorage.getItem('enviaTrack_mensajeros');
+    if (datosGuardados) {
+        mensajerosRegistrados = JSON.parse(datosGuardados);
+        console.log('👤 Mensajeros cargados:', mensajerosRegistrados.length);
+    } else {
+        // Datos por defecto si no hay ninguno
+        mensajerosRegistrados = [
+            { codigo: "MEN001", nombre: "Pedro Martínez", telefono: "3109876543" },
+            { codigo: "MEN002", nombre: "Luis Torres", telefono: "3155558888" },
+            { codigo: "MEN003", nombre: "Ana Ramírez", telefono: "3001112233" }
+        ];
+        guardarMensajeros();
+    }
+}
+
+function guardarMensajeros() {
+    localStorage.setItem('enviaTrack_mensajeros', JSON.stringify(mensajerosRegistrados));
+}
+
+// Función para cargar envíos desde localStorage
 function cargarEnvios() {
     const datosGuardados = localStorage.getItem('enviaTrack_envios');
     if (datosGuardados) {
@@ -17,7 +34,7 @@ function cargarEnvios() {
     return [];
 }
 
-// Función para guardar datos
+// Función para guardar envíos
 function guardarEnvios(envios) {
     localStorage.setItem('enviaTrack_envios', JSON.stringify(envios));
 }
@@ -159,6 +176,9 @@ function iniciarSesion() {
         return;
     }
     
+    // Recargar mensajeros para asegurar que están actualizados
+    cargarMensajeros();
+    
     const mensajero = mensajerosRegistrados.find(m => m.codigo === codigo);
     
     if (!mensajero) {
@@ -211,3 +231,6 @@ document.getElementById('codigo-mensajero').addEventListener('keypress', functio
         iniciarSesion();
     }
 });
+
+// Cargar mensajeros al iniciar
+cargarMensajeros();
