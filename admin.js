@@ -46,7 +46,7 @@ function iniciarSesion() {
         return;
     }
 
-    const usuarioValido = USUARIOS_AUTORIZADOS.find(u => u.email === email && u.password === password);
+    const usuarioValido = USUARIOS_AUTORIZADOS.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
 
     if (usuarioValido) {
         localStorage.setItem('enviaTrack_sesion', 'activa');
