@@ -371,11 +371,13 @@ function toggleDarkMode() {
 // ─── Login / Logout ───────────────────────────────────────────────────────────
 
 function verificarSesion() {
-    const sesion = localStorage.getItem('enviaTrack_sesion');
-    if (sesion === 'activa') {
-        document.getElementById('login-panel').style.display = 'none';
-        document.getElementById('main-panel').style.display  = 'block';
-    }
+    // Siempre mostrar login al cargar la página
+    document.getElementById('login-panel').style.display = 'block';
+    document.getElementById('main-panel').style.display = 'none';
+    
+    // Limpiar cualquier sesión guardada
+    localStorage.removeItem('enviaTrack_sesion');
+    localStorage.removeItem('enviaTrack_usuario');
 }
 
 // Usuarios autorizados (puedes agregar más)
@@ -393,7 +395,6 @@ function iniciarSesion() {
         return;
     }
 
-    // Verificar credenciales
     const usuarioValido = USUARIOS_AUTORIZADOS.find(u => u.email === email && u.password === password);
 
     if (usuarioValido) {
@@ -402,7 +403,15 @@ function iniciarSesion() {
         document.getElementById('login-panel').style.display = 'none';
         document.getElementById('main-panel').style.display = 'block';
         mostrarMensaje(`Bienvenido, ${email}`, 'success', 'Sesión iniciada');
-        mostrarTabla();
+        
+        // Solo cargar datos si es admin.js o app.js según corresponda
+        if (typeof cargarDatos === 'function') cargarDatos();
+        if (typeof mostrarTabla === 'function') mostrarTabla();
+        if (typeof mostrarMensajeros === 'function') {
+            mostrarMensajeros();
+            actualizarSelects();
+            actualizarGraficoMensajeros();
+        }
     } else {
         mostrarMensaje('Credenciales incorrectas', 'error', 'Error de acceso');
     }
