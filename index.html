@@ -2,91 +2,11 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <meta name="google" content="notranslate">
-    <title>EnvíaTrack - Panel de Control</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <meta http-equiv="refresh" content="0; url=dashboard.html">
+    <title>EnvíaTrack</title>
 </head>
 <body>
-    <div id="toast-container" class="toast-container"></div>
-
-    <!-- Pantalla de Login -->
-    <div id="login-panel" style="max-width: 400px; margin: 50px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-        <h2 style="text-align: center;">🔐 EnvíaTrack</h2>
-        <p style="text-align: center; color: #666; margin-bottom: 20px;">Inicia sesión para continuar</p>
-        <input type="email" id="login-email" placeholder="Correo electrónico" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
-        <input type="password" id="login-password" placeholder="Contraseña" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
-        <button id="btn-login" style="width: 100%; padding: 12px; background-color: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer;">Iniciar Sesión</button>
-        <p style="text-align: center; margin-top: 20px;">
-            <a href="mensajero.html" style="color: #3498db;">← Acceso mensajeros</a>
-        </p>
-    </div>
-
-    <!-- Panel Principal (oculto hasta login) -->
-    <div id="main-panel" style="display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;">
-            <h1>EnvíaTrack</h1>
-            <div style="display: flex; gap: 10px;">
-                <button id="btn-dark-mode" style="background-color: #34495e; color: white; padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer;">🌙 Modo Oscuro</button>
-                <button id="btn-logout" style="background-color: #e74c3c; color: white; padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer;">🚪 Cerrar Sesión</button>
-                <a href="admin.html" style="background-color: #9b59b6; color: white; padding: 8px 16px; border-radius: 5px; text-decoration: none;">👑 Administrar</a>
-            </div>
-        </div>
-        <p>Panel de control de envíos</p>
-
-        <!-- Tarjetas de estadísticas -->
-        <div id="estadisticas" style="display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap;">
-            <div class="tarjeta pendiente"><h3>⏳ Pendientes</h3><p id="contador-pendiente">0</p></div>
-            <div class="tarjeta en-ruta"><h3>🚚 En Ruta</h3><p id="contador-en-ruta">0</p></div>
-            <div class="tarjeta entregado"><h3>✅ Entregados</h3><p id="contador-entregado">0</p></div>
-            <div class="tarjeta total"><h3>📦 Total</h3><p id="contador-total">0</p></div>
-        </div>
-
-        <!-- Gráficos -->
-        <div id="dashboard" style="display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap;">
-            <div style="flex: 1; background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                <h3 style="text-align: center;">📊 Distribución de Envíos</h3>
-                <canvas id="graficoEstados" style="max-height: 250px;"></canvas>
-            </div>
-            <div style="flex: 1; background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                <h3 style="text-align: center;">📈 Evolución de Entregas</h3>
-                <canvas id="graficoEntregas" style="max-height: 250px;"></canvas>
-            </div>
-        </div>
-
-        <!-- Formulario -->
-        <div id="formulario-envio" style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-            <h2>Registrar Nuevo Envío</h2>
-            <form id="form-nuevo-envio">
-                <div style="margin-bottom: 10px;">
-                    <label style="display: inline-block; width: 100px;">Destinatario:</label>
-                    <input type="text" id="destinatario" required style="padding: 8px; width: 300px;">
-                </div>
-                <div style="margin-bottom: 10px;">
-                    <label style="display: inline-block; width: 100px;">Dirección:</label>
-                    <input type="text" id="direccion" required style="padding: 8px; width: 300px;">
-                </div>
-                <div style="margin-bottom: 10px;">
-                    <label style="display: inline-block; width: 100px;">Teléfono:</label>
-                    <input type="text" id="telefono" required style="padding: 8px; width: 300px;">
-                </div>
-                <button type="submit" style="background-color: #27ae60; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Registrar Envío</button>
-            </form>
-        </div>
-
-        <!-- Tabla de envíos -->
-        <div id="contenedor-envios">
-            <h2>Lista de Envíos</h2>
-            <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
-                <input type="text" id="buscador" placeholder="🔍 Buscar por destinatario o dirección..." style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                <button id="btn-exportar" style="background-color: #27ae60; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">📊 Exportar a Excel</button>
-            </div>
-            <div id="tabla-envios"></div>
-        </div>
-    </div>
-
-    <script src="app.js"></script>
+    <p>Redirigiendo al panel de control...</p>
+    <script>window.location.href = "dashboard.html";</script>
 </body>
 </html>
