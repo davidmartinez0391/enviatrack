@@ -5,22 +5,42 @@ let mensajerosRegistrados = [];
 let mensajeroActual = null;
 
 // Función para cargar mensajeros desde localStorage
-function cargarMensajeros() {
-    const datosGuardados = localStorage.getItem('enviaTrack_mensajeros');
-    if (datosGuardados) {
-        mensajerosRegistrados = JSON.parse(datosGuardados);
-        console.log('👤 Mensajeros cargados:', mensajerosRegistrados.length);
-    } else {
-        // Datos por defecto
-        mensajerosRegistrados = [
-            { codigo: "MEN001", nombre: "Pedro Martínez", telefono: "3109876543" },
-            { codigo: "MEN002", nombre: "Luis Torres", telefono: "3155558888" },
-            { codigo: "MEN003", nombre: "Ana Ramírez", telefono: "3001112233" }
-        ];
-        guardarMensajeros();
+async function cargarMensajeros() {
+    try {
+        // Intentar sincronizar desde la web
+        const response = await fetch('https://davidmartinez0391.github.io/enviatrack/data.json');
+        const data = await response.json();
+        
+        if (data.mensajeros && data.mensajeros.length > 0) {
+            mensajerosRegistrados = data.mensajeros;
+            guardarMensajeros();
+            console.log('📡 Mensajeros sincronizados desde la web:', mensajerosRegistrados.length);
+        }
+        
+        // También sincronizar envíos
+        if (data.envios && data.envios.length > 0) {
+            localStorage.setItem('enviaTrack_envios', JSON.stringify(data.envios));
+            console.log('📦 Envíos sincronizados:', data.envios.length);
+        }
+        
+        // Mostrar códigos disponibles
+        console.log('Códigos disponibles:', mensajerosRegistrados.map(m => m.codigo).join(', '));
+        
+    } catch (error) {
+        console.error('Error al sincronizar desde web:', error);
+        // Si falla, usar datos locales
+        const datosGuardados = localStorage.getItem('enviaTrack_mensajeros');
+        if (datosGuardados) {
+            mensajerosRegistrados = JSON.parse(datosGuardados);
+        } else {
+            mensajerosRegistrados = [
+                { codigo: "MEN001", nombre: "Pedro Martínez", telefono: "3109876543" },
+                { codigo: "MEN002", nombre: "Luis Torres", telefono: "3155558888" },
+                { codigo: "MEN003", nombre: "Ana Ramírez", telefono: "3001112233" }
+            ];
+            guardarMensajeros();
+        }
     }
-    // Mostrar en consola los códigos disponibles para depuración
-    console.log('Códigos disponibles:', mensajerosRegistrados.map(m => m.codigo).join(', '));
 }
 
 function guardarMensajeros() {
@@ -121,9 +141,15 @@ function mostrarEnviosMensajero(enviosAMostrar = null) {
 // Función para filtrar envíos del mensajero
 function filtrarEnviosMensajero() {
     const textoBusqueda = document.getElementById('buscador-mensajero').value.toLowerCase();
-    const todosEnvios = cargarEnvios();
+    let todosEnvios = cargarEnvios();
+    
+    // Mostrar en consola para depuración
+    console.log('Todos los envíos:', todosEnvios);
+    console.log('Mensajero actual:', mensajeroActual);
     
     let enviosFiltrados = todosEnvios.filter(envio => envio.mensajero === mensajeroActual.nombre);
+    
+    console.log('Envíos del mensajero:', enviosFiltrados);
     
     if (textoBusqueda !== '') {
         enviosFiltrados = enviosFiltrados.filter(envio => {
