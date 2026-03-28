@@ -4,5 +4,8 @@
     { "codigo": "MEN002", "nombre": "Luis Torres", "telefono": "3155558888" },
     { "codigo": "MEN003", "nombre": "Ana Ramírez", "telefono": "3001112233" }
   ],
-  "envios": []
+  "envios": [
+    { "id": 1, "destinatario": "María González", "direccion": "Calle 45 # 20-30, Bogotá", "telefono": "3001234567", "estado": "pendiente", "mensajero": "Pedro Martínez", "fechaCreacion": "2025-03-22 10:30" },
+    { "id": 2, "destinatario": "Carlos Rodríguez", "direccion": "Carrera 15 # 88-12, Medellín", "telefono": "3109876543", "estado": "en_ruta", "mensajero": "Luis Torres", "fechaCreacion": "2025-03-22 09:15" }
+  ]
 }
